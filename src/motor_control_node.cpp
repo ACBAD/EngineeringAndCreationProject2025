@@ -1,5 +1,6 @@
 #include <ros/ros.h>
 #include <geometry_msgs/Twist.h>
+#include <EngineeringAndCreationProject/motor_data.h>
 #include <unistd.h>
 #include <termios.h>
 #include <fcntl.h>
@@ -41,8 +42,10 @@ int getSerialDevice() {
 }
 
 int serial_port = -1;
+ros::Publisher odom_pub;
 
 void sendMotorAction(const geometry_msgs::Twist& msg) {
+
   const int x = std::min(static_cast<int>(msg.linear.x/MAX_LINEAR_SPEED*100), 100);
   const int r = std::min(static_cast<int>(msg.angular.z/MAX_ANG_SPEED*100), 100);
   char ctl_stl[11];
@@ -50,10 +53,16 @@ void sendMotorAction(const geometry_msgs::Twist& msg) {
     msg.linear.x>=0?'+':'-', x,
     msg.angular.z>=0?'+':'-', r
     );
-  if(write(serial_port, ctl_stl, 10))
+  if(write(serial_port, ctl_stl, 10) == 0)
     ROS_INFO("Send vel: %s", ctl_stl);
   else
     ROS_WARN("Failed send vel: %s", ctl_stl);
+  char motor_date[60];
+  if(read(serial_port, motor_date, 52)) {
+
+  }
+  else
+    ROS_WARN("Failed Receive motor data: read failed");
 }
 
 void handleSIGTERM(int sig) {
@@ -79,8 +88,8 @@ int main(int argc, char* argv[]) {
   // ROS init
   ros::init(argc, argv, "motor_control_node");
   ros::NodeHandle node_handle;
+  odom_pub = node_handle.advertise<EngineeringAndCreationProject::motor_data>("/motor_data", 2);
   ros::Subscriber vel_sub = node_handle.subscribe("/cmd_vel", 2, sendMotorAction);
-
   ros::spin();
   return 0;
 }
