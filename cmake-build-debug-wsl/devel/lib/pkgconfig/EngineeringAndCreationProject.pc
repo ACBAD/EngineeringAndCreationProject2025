@@ -1,8 +1,0 @@
-prefix=/home/xd/catkin_ws/src/EngineeringAndCreationProject/cmake-build-debug-wsl/devel
-
-Name: EngineeringAndCreationProject
-Description: Description of EngineeringAndCreationProject
-Version: 0.0.0
-Cflags: 
-Libs: -L${prefix}/lib 
-Requires: 
