@@ -8,7 +8,7 @@ project(EngineeringAndCreationProject)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 include_directories(
-    ${CMAKE_SOURCE_DIR}/../../devel/include
+    ${CMAKE_SOURCE_DIR}/../../../devel/include
 )
 find_package(catkin REQUIRED COMPONENTS
     actionlib
