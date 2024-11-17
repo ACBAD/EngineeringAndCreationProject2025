@@ -6,90 +6,96 @@
 #include <fcntl.h>
 #include <csignal>
 #define SERIAL_PORT "/dev/ttyS3"
-#define BAUD_RATE B115200
 #define MAX_LINEAR_SPEED 1.2
 #define MAX_ANG_SPEED 1
 
-int getSerialDevice() {
-  // UART dev init
-  termios tty{};
-  const int serial_port = open(SERIAL_PORT, O_RDWR | O_NOCTTY);
-  if (serial_port < 0) {
-    std::cerr<<"Error opening serial port"<<std::endl;
-    return -1;
+ros::Publisher odom_pub;
+geometry_msgs::Twist global_twist;
+
+void substring(const char *src, const int start, const int length, char* dest) {
+  if (start >= 0 && length > 0 && start < strlen(src)) {
+    strncpy(dest, src + start, length);
+    dest[length] = '\0'; // 手动添加字符串结束符
+  } else {
+    dest[0] = '\0'; // 输入无效时返回空字符串
   }
-  // Configuration of serial
-  memset(&tty, 0, sizeof(tty));
-  if (tcgetattr(serial_port, &tty) != 0) {
-    std::cerr<<"Error getting serial port attributes"<<std::endl;
-    close(serial_port);
-    return -1;
-  }
-  cfsetospeed(&tty, BAUD_RATE); // set correct baud rate
-  cfsetispeed(&tty, BAUD_RATE);
-  tty.c_cflag |= (CLOCAL | CREAD);
-  tty.c_cflag &= ~PARENB;
-  tty.c_cflag &= ~CSTOPB;
-  tty.c_cflag &= ~CSIZE;
-  tty.c_cflag |= CS8;
-  // write configration to serial
-  if (tcsetattr(serial_port, TCSANOW, &tty) != 0) {
-    std::cerr<<"Error setting serial port attributes"<<std::endl;
-    close(serial_port);
-    return -1;
-  }
-  return serial_port;
 }
 
-int serial_port = -1;
-ros::Publisher odom_pub;
+long long convertNumber(const char* motor_data, const int start) {
+  char temp_num_str[20];
+  errno = 0;
+  char* end;
+  substring(motor_data, start, 10, temp_num_str);
+  const long long temp_num = std::strtoll(temp_num_str, &end, 10);
+  if (errno == ERANGE)
+    ROS_ERROR("Error in converting %s : Out of range", motor_data);
+  else if (*end != '\0')
+    ROS_ERROR("Error in converting %s : Invalid number", motor_data);
+  else
+    return temp_num;
+  return -1;
+}
 
-void sendMotorAction(const geometry_msgs::Twist& msg) {
+void updateMotorAction(const geometry_msgs::Twist& msg) {
+  global_twist = msg;
+}
 
-  const int x = std::min(static_cast<int>(msg.linear.x/MAX_LINEAR_SPEED*100), 100);
-  const int r = std::min(static_cast<int>(msg.angular.z/MAX_ANG_SPEED*100), 100);
+void sendMotorAction() {
+  const int x = std::min(static_cast<int>(global_twist.linear.x/MAX_LINEAR_SPEED*100), 100);
+  const int r = std::min(static_cast<int>(global_twist.angular.z/MAX_ANG_SPEED*100), 100);
   char ctl_stl[11];
   sprintf(ctl_stl, "X%c%03dR%c%03d",
-    msg.linear.x>=0?'+':'-', x,
-    msg.angular.z>=0?'+':'-', r
+    global_twist.linear.x>=0?'+':'-', x,
+    global_twist.angular.z>=0?'+':'-', r
     );
+  const int serial_port = open("/dev/ttyS3", O_RDWR | O_NOCTTY);
+  if (serial_port < 0) {
+    std::cerr<<"Error opening serial port"<<std::endl;
+  }
   if(write(serial_port, ctl_stl, 10) == 0)
     ROS_INFO("Send vel: %s", ctl_stl);
   else
     ROS_WARN("Failed send vel: %s", ctl_stl);
-  char motor_date[60];
-  if(read(serial_port, motor_date, 52)) {
-
+  char motor_data[60];
+  if(read(serial_port, motor_data, 60)) {
+    EngineeringAndCreationProject::motor_data data;
+    data.stamp = ros::Time::now();
+    data.left_laps_p = convertNumber(motor_data, 3);
+    if (data.left_laps_p < 0)
+      return;
+    data.left_laps_n = convertNumber(motor_data, 16);
+    if (data.left_laps_n < 0)
+      return;
+    data.right_laps_n = convertNumber(motor_data, 29);
+    if (data.right_laps_n < 0)
+      return;
+    data.right_laps_p = convertNumber(motor_data, 42);
+    if (data.right_laps_p < 0)
+      return;
+    odom_pub.publish(data);
   }
   else
     ROS_WARN("Failed Receive motor data: read failed");
 }
 
-void handleSIGTERM(int sig) {
-  std::cout<<"Exit";
-  exit(0);
-}
-
 int main(int argc, char* argv[]) {
-  // SIGTERM handler init
-  struct sigaction sa{};
-  sa.sa_flags = 0;
-  sa.sa_handler = handleSIGTERM;
-  if (sigaction(SIGINT, &sa, nullptr) == -1) {
-    printf("sig bind err");
-    return 1;
-  }
-
-  // SerialDevice init
-  serial_port = getSerialDevice();
-  if(serial_port < 0)
-    return 1;
-
   // ROS init
   ros::init(argc, argv, "motor_control_node");
   ros::NodeHandle node_handle;
   odom_pub = node_handle.advertise<EngineeringAndCreationProject::motor_data>("/motor_data", 2);
-  ros::Subscriber vel_sub = node_handle.subscribe("/cmd_vel", 2, sendMotorAction);
-  ros::spin();
+  ros::Subscriber vel_sub = node_handle.subscribe("/cmd_vel", 2, updateMotorAction);
+  ros::Rate rate(100);
+
+  global_twist.linear.x = 0;
+  global_twist.linear.y = 0;
+  global_twist.linear.z = 0;
+  global_twist.angular.x = 0;
+  global_twist.angular.y = 0;
+  global_twist.angular.z = 0;
+  while (ros::ok()) {
+    ros::spinOnce();
+    sendMotorAction();
+    rate.sleep();
+  }
   return 0;
 }
