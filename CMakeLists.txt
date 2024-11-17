@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(EngineeringAndCreationProject)
+project(eac_pkg)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
@@ -153,7 +153,7 @@ add_executable(motor_control_node src/motor_control_node.cpp)
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(motor_control_node ${catkin_LIBRARIES})
-add_dependencies(motor_control_node EngineeringAndCreationProject_generate_messages_cpp)
+add_dependencies(motor_control_node eac_pkg_generate_messages_cpp)
 
 #############
 ## Install ##
