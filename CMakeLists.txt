@@ -7,7 +7,7 @@ project(eac_pkg)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-set(CATKIN_DEVEL_PREFIX ${CMAKE_SOURCE_DIR}/../../devel)
+#set(CATKIN_DEVEL_PREFIX ${CMAKE_SOURCE_DIR}/../../devel)
 
 find_package(catkin REQUIRED COMPONENTS
     actionlib
