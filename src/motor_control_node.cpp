@@ -55,11 +55,12 @@ void sendMotorAction() {
   const ssize_t success_nums = write(serial_port, ctl_stl, 10);
   close(serial_port);
   if(success_nums == 10)
-    ROS_INFO("Send vel: %s", ctl_stl);
+    ROS_DEBUG("Send vel: %s", ctl_stl);
   else
     ROS_WARN("Failed send vel: %s, success_num is %ld", ctl_stl, success_nums);
   char motor_data[60];
   if(read(serial_port, motor_data, 60)) {
+    ROS_DEBUG("Receive raw motor data: %s", motor_data);
     eac_pkg::motor_data data;
     data.stamp = ros::Time::now();
     data.left_laps_p = convertNumber(motor_data, 3);
@@ -81,6 +82,7 @@ void sendMotorAction() {
 }
 
 int main(int argc, char* argv[]) {
+
   // ROS init
   ros::init(argc, argv, "motor_control_node");
   ros::NodeHandle node_handle;
