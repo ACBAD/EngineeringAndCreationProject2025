@@ -48,22 +48,20 @@ void sendMotorAction() {
     global_twist.linear.x>=0?'+':'-', x,
     global_twist.angular.z>=0?'+':'-', r
     );
-  const int serial_port = open("/dev/ttyS3", O_RDWR | O_NOCTTY);
-  if (serial_port < 0) {
+  const int write_sp = open("/dev/ttyS3", O_RDWR | O_NOCTTY);
+  if (write_sp < 0) {
     std::cerr<<"Error opening serial port"<<std::endl;
   }
-  const ssize_t write_count = write(serial_port, ctl_stl, 10);
+  const ssize_t write_count = write(write_sp, ctl_stl, 10);
+  close(write_sp);
   if(write_count == 10)
     ROS_DEBUG("Send vel: %s", ctl_stl);
   else
     ROS_WARN("Failed send vel: %s, success_num is %ld", ctl_stl, write_count);
   char motor_data[60];
-  const ssize_t read_count = read(serial_port, motor_data, 60);
+  const int read_sp = open("/dev/ttyS3", O_RDWR | O_NOCTTY);
+  const ssize_t read_count = read(read_sp, motor_data, 60);
   if(read_count > 0) {
-    for (int i = 40; i < 60; i++) {
-      if(motor_data[i] == '\n')
-        motor_data[i + 1] = 0;
-    }
     ROS_DEBUG("Receive raw motor data: %s", motor_data);
     eac_pkg::motor_data data;
     data.stamp = ros::Time::now();
@@ -83,7 +81,7 @@ void sendMotorAction() {
   }
   else
     ROS_WARN("Failed Receive motor data: read_count is %ld", read_count);
-  close(serial_port);
+  close(read_sp);
 }
 
 int main(int argc, char* argv[]) {
@@ -94,8 +92,6 @@ int main(int argc, char* argv[]) {
   odom_pub = node_handle.advertise<eac_pkg::motor_data>("/motor_data", 2);
   ros::Subscriber vel_sub = node_handle.subscribe("/cmd_vel", 2, updateMotorAction);
   ros::Rate rate(100);
-  ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Debug);
-
 
   global_twist.linear.x = 0;
   global_twist.linear.y = 0;
