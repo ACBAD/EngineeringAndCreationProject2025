@@ -1,6 +1,6 @@
 #include <ros/ros.h>
 #include <geometry_msgs/Twist.h>
-#include <EngineeringAndCreationProject/motor_data.h>
+#include <eac_pkg/motor_data.h>
 #include <unistd.h>
 #include <termios.h>
 #include <fcntl.h>
@@ -58,7 +58,7 @@ void sendMotorAction() {
     ROS_WARN("Failed send vel: %s", ctl_stl);
   char motor_data[60];
   if(read(serial_port, motor_data, 60)) {
-    EngineeringAndCreationProject::motor_data data;
+    eac_pkg::motor_data data;
     data.stamp = ros::Time::now();
     data.left_laps_p = convertNumber(motor_data, 3);
     if (data.left_laps_p < 0)
@@ -82,7 +82,7 @@ int main(int argc, char* argv[]) {
   // ROS init
   ros::init(argc, argv, "motor_control_node");
   ros::NodeHandle node_handle;
-  odom_pub = node_handle.advertise<EngineeringAndCreationProject::motor_data>("/motor_data", 2);
+  odom_pub = node_handle.advertise<eac_pkg::motor_data>("/motor_data", 2);
   ros::Subscriber vel_sub = node_handle.subscribe("/cmd_vel", 2, updateMotorAction);
   ros::Rate rate(100);
 
