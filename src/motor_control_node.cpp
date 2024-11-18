@@ -52,10 +52,12 @@ void sendMotorAction() {
   if (serial_port < 0) {
     std::cerr<<"Error opening serial port"<<std::endl;
   }
-  if(write(serial_port, ctl_stl, 10) == 10)
+  const ssize_t success_nums = write(serial_port, ctl_stl, 10);
+  close(serial_port);
+  if(success_nums == 10)
     ROS_INFO("Send vel: %s", ctl_stl);
   else
-    ROS_WARN("Failed send vel: %s", ctl_stl);
+    ROS_WARN("Failed send vel: %s, success_num is %ld", ctl_stl, success_nums);
   char motor_data[60];
   if(read(serial_port, motor_data, 60)) {
     eac_pkg::motor_data data;
