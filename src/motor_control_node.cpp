@@ -52,14 +52,15 @@ void sendMotorAction() {
   if (serial_port < 0) {
     std::cerr<<"Error opening serial port"<<std::endl;
   }
-  const ssize_t success_nums = write(serial_port, ctl_stl, 10);
+  const ssize_t write_count = write(serial_port, ctl_stl, 10);
   close(serial_port);
-  if(success_nums == 10)
+  if(write_count == 10)
     ROS_DEBUG("Send vel: %s", ctl_stl);
   else
-    ROS_WARN("Failed send vel: %s, success_num is %ld", ctl_stl, success_nums);
+    ROS_WARN("Failed send vel: %s, success_num is %ld", ctl_stl, write_count);
   char motor_data[60];
-  if(read(serial_port, motor_data, 60)) {
+  const ssize_t read_count = read(serial_port, motor_data, 60);
+  if(read_count > 0) {
     ROS_DEBUG("Receive raw motor data: %s", motor_data);
     eac_pkg::motor_data data;
     data.stamp = ros::Time::now();
@@ -78,7 +79,7 @@ void sendMotorAction() {
     odom_pub.publish(data);
   }
   else
-    ROS_WARN("Failed Receive motor data: read failed");
+    ROS_WARN("Failed Receive motor data: read_count is %ld", read_count);
 }
 
 int main(int argc, char* argv[]) {
