@@ -52,9 +52,9 @@ void sendMotorAction() {
   if (write_sp < 0) {
     std::cerr<<"Error opening serial port"<<std::endl;
   }
-  const ssize_t write_count = write(write_sp, ctl_stl, 12);
+  const ssize_t write_count = write(write_sp, ctl_stl, strlen(ctl_stl));
   close(write_sp);
-  if(write_count == 10)
+  if(write_count == strlen(ctl_stl))
     ROS_DEBUG("Send vel: %s", ctl_stl);
   else
     ROS_WARN("Failed send vel: %s, success_num is %ld", ctl_stl, write_count);
