@@ -62,6 +62,10 @@ void sendMotorAction() {
   const int read_sp = open("/dev/ttyS3", O_RDWR | O_NOCTTY);
   const ssize_t read_count = read(read_sp, motor_data, 60);
   if(read_count > 0) {
+    for (int i = 0; motor_data[i] != '\n' && i < 60; i++) {
+      if(motor_data[i] == '\n')
+        motor_data[i + 1] = 0;
+    }
     ROS_DEBUG("Receive raw motor data: %s", motor_data);
     eac_pkg::motor_data data;
     data.stamp = ros::Time::now();
