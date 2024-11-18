@@ -43,7 +43,7 @@ void updateMotorAction(const geometry_msgs::Twist& msg) {
 void sendMotorAction() {
   const int x = std::min(static_cast<int>(global_twist.linear.x/MAX_LINEAR_SPEED*100), 100);
   const int r = std::min(static_cast<int>(global_twist.angular.z/MAX_ANG_SPEED*100), 100);
-  char ctl_stl[11];
+  char ctl_stl[13];
   sprintf(ctl_stl, "{X%c%03dR%c%03d}",
     global_twist.linear.x>=0?'+':'-', x,
     global_twist.angular.z>=0?'+':'-', r
