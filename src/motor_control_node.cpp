@@ -43,8 +43,8 @@ void updateMotorAction(const geometry_msgs::Twist& msg) {
 void sendMotorAction() {
   const int x = std::min(static_cast<int>(global_twist.linear.x/MAX_LINEAR_SPEED*100), 100);
   const int r = std::min(static_cast<int>(global_twist.angular.z/MAX_ANG_SPEED*100), 100);
-  char ctl_stl[100];
-  sprintf(ctl_stl, "{X%c%03dR%c%03d}",
+  char ctl_str[100];
+  sprintf(ctl_str, "{X%c%03dR%c%03d}",
     global_twist.linear.x>=0?'+':'-', x,
     global_twist.angular.z>=0?'+':'-', r
     );
@@ -52,12 +52,12 @@ void sendMotorAction() {
   if (write_sp < 0) {
     std::cerr<<"Error opening serial port"<<std::endl;
   }
-  const ssize_t write_count = write(write_sp, ctl_stl, strlen(ctl_stl));
+  const ssize_t write_count = write(write_sp, ctl_str, strlen(ctl_str));
   close(write_sp);
-  if(write_count == strlen(ctl_stl))
-    ROS_DEBUG("Send vel: %s", ctl_stl);
+  if(write_count == strlen(ctl_str))
+    ROS_DEBUG("Send vel: %s, strlen:%lu", ctl_str, strlen(ctl_str));
   else
-    ROS_WARN("Failed send vel: %s, success_num is %ld", ctl_stl, write_count);
+    ROS_WARN("Failed send vel: %s, success_num is %ld", ctl_str, write_count);
   char motor_data[60];
   const int read_sp = open("/dev/ttyS3", O_RDWR | O_NOCTTY);
   const ssize_t read_count = read(read_sp, motor_data, 60);
