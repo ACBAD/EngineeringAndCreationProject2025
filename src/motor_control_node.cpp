@@ -48,21 +48,19 @@ void sendMotorAction() {
     global_twist.linear.x>=0?'+':'-', x,
     global_twist.angular.z>=0?'+':'-', r
     );
-  const int write_sp = open("/dev/ttyS3", O_RDWR | O_NOCTTY);
-  if (write_sp < 0) {
+  const int serial_port = open("/dev/ttyS3", O_RDWR | O_NOCTTY);
+  if (serial_port < 0) {
     std::cerr<<"Error opening serial port"<<std::endl;
   }
-  const ssize_t write_count = write(write_sp, ctl_stl, 10);
-  close(write_sp);
+  const ssize_t write_count = write(serial_port, ctl_stl, 10);
   if(write_count == 10)
     ROS_DEBUG("Send vel: %s", ctl_stl);
   else
     ROS_WARN("Failed send vel: %s, success_num is %ld", ctl_stl, write_count);
   char motor_data[60];
-  const int read_sp = open("/dev/ttyS3", O_RDWR | O_NOCTTY);
-  const ssize_t read_count = read(read_sp, motor_data, 60);
+  const ssize_t read_count = read(serial_port, motor_data, 60);
   if(read_count > 0) {
-    for (int i = 0; motor_data[i] != '\n' && i < 60; i++) {
+    for (int i = 40; i < 60; i++) {
       if(motor_data[i] == '\n')
         motor_data[i + 1] = 0;
     }
@@ -85,7 +83,7 @@ void sendMotorAction() {
   }
   else
     ROS_WARN("Failed Receive motor data: read_count is %ld", read_count);
-  close(read_sp);
+  close(serial_port);
 }
 
 int main(int argc, char* argv[]) {
