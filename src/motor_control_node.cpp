@@ -52,7 +52,7 @@ void sendMotorAction() {
   if (serial_port < 0) {
     std::cerr<<"Error opening serial port"<<std::endl;
   }
-  if(write(serial_port, ctl_stl, 10) == 0)
+  if(write(serial_port, ctl_stl, 10) == 10)
     ROS_INFO("Send vel: %s", ctl_stl);
   else
     ROS_WARN("Failed send vel: %s", ctl_stl);
