@@ -43,8 +43,8 @@ void updateMotorAction(const geometry_msgs::Twist& msg) {
 void sendMotorAction() {
   const int x = std::min(static_cast<int>(global_twist.linear.x/MAX_LINEAR_SPEED*100), 100);
   const int r = std::min(static_cast<int>(global_twist.angular.z/MAX_ANG_SPEED*100), 100);
-  char ctl_stl[13];
-  sprintf(ctl_stl, "{X%c%03dR%c%03d}",
+  char ctl_stl[100];
+  sprintf(ctl_stl, "X%c%03dR%c%03d",
     global_twist.linear.x>=0?'+':'-', x,
     global_twist.angular.z>=0?'+':'-', r
     );
@@ -62,6 +62,7 @@ void sendMotorAction() {
   const int read_sp = open("/dev/ttyS3", O_RDWR | O_NOCTTY);
   const ssize_t read_count = read(read_sp, motor_data, 60);
   if(read_count > 0) {
+    motor_data[52] = 0;
     ROS_DEBUG("Receive raw motor data: %s", motor_data);
     eac_pkg::motor_data data;
     data.stamp = ros::Time::now();
