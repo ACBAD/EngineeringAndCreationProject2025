@@ -141,6 +141,7 @@ include_directories(
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
 add_executable(motor_control_node src/motor_control_node.cpp)
+add_executable(test_vel_ctl src/test_vel_ctl.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -155,6 +156,7 @@ add_executable(motor_control_node src/motor_control_node.cpp)
 ## Specify libraries to link a library or executable target against
 target_link_libraries(motor_control_node ${catkin_LIBRARIES})
 add_dependencies(motor_control_node eac_pkg_generate_messages_cpp)
+target_link_libraries(test_vel_ctl ${catkin_LIBRARIES})
 
 #############
 ## Install ##
