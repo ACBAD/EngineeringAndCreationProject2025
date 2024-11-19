@@ -92,7 +92,7 @@ int main(int argc, char* argv[]) {
   ros::NodeHandle node_handle;
   odom_pub = node_handle.advertise<eac_pkg::motor_data>("/motor_data", 2);
   ros::Subscriber vel_sub = node_handle.subscribe("/cmd_vel", 2, updateMotorAction);
-  ros::Rate rate(10);
+  ros::Rate rate(5);
   ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Debug);
 
   global_twist.linear.x = 0;
