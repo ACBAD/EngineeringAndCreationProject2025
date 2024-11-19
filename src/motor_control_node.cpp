@@ -83,6 +83,7 @@ void sendMotorAction() {
   else
     ROS_WARN("Failed Receive motor data: read_count is %ld", read_count);
   close(read_sp);
+  usleep(1000);
 }
 
 int main(int argc, char* argv[]) {
