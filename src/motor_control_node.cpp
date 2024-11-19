@@ -58,31 +58,31 @@ void sendMotorAction() {
     ROS_DEBUG("Send vel: %s, strlen:%lu", ctl_str, strlen(ctl_str));
   else
     ROS_WARN("Failed send vel: %s, success_num is %ld", ctl_str, write_count);
-  // char motor_data[60];
-  // const int read_sp = open("/dev/ttyS3", O_RDWR | O_NOCTTY);
-  // const ssize_t read_count = read(read_sp, motor_data, 60);
-  // if(read_count > 0) {
-  //   motor_data[52] = 0;
-  //   ROS_DEBUG("Receive raw motor data: %s", motor_data);
-  //   eac_pkg::motor_data data;
-  //   data.stamp = ros::Time::now();
-  //   data.left_laps_p = convertNumber(motor_data, 3);
-  //   if (data.left_laps_p < 0)
-  //     return;
-  //   data.left_laps_n = convertNumber(motor_data, 16);
-  //   if (data.left_laps_n < 0)
-  //     return;
-  //   data.right_laps_n = convertNumber(motor_data, 29);
-  //   if (data.right_laps_n < 0)
-  //     return;
-  //   data.right_laps_p = convertNumber(motor_data, 42);
-  //   if (data.right_laps_p < 0)
-  //     return;
-  //   odom_pub.publish(data);
-  // }
-  // else
-  //   ROS_WARN("Failed Receive motor data: read_count is %ld", read_count);
-  // close(read_sp);
+  char motor_data[60];
+  const int read_sp = open("/dev/ttyS3", O_RDWR | O_NOCTTY);
+  const ssize_t read_count = read(read_sp, motor_data, 60);
+  if(read_count > 0) {
+    motor_data[52] = 0;
+    ROS_DEBUG("Receive raw motor data: %s", motor_data);
+    eac_pkg::motor_data data;
+    data.stamp = ros::Time::now();
+    data.left_laps_p = convertNumber(motor_data, 3);
+    if (data.left_laps_p < 0)
+      return;
+    data.left_laps_n = convertNumber(motor_data, 16);
+    if (data.left_laps_n < 0)
+      return;
+    data.right_laps_n = convertNumber(motor_data, 29);
+    if (data.right_laps_n < 0)
+      return;
+    data.right_laps_p = convertNumber(motor_data, 42);
+    if (data.right_laps_p < 0)
+      return;
+    odom_pub.publish(data);
+  }
+  else
+    ROS_WARN("Failed Receive motor data: read_count is %ld", read_count);
+  close(read_sp);
 }
 
 int main(int argc, char* argv[]) {
