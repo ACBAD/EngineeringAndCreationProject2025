@@ -19,7 +19,6 @@ find_package(catkin REQUIRED COMPONENTS
     std_msgs
     message_generation
 )
-
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 
@@ -121,11 +120,14 @@ catkin_package(
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
+string(REGEX MATCH "(.*catkin_ws)" catkin_PATH ${CMAKE_PREFIX_PATH})
 include_directories(
 # include
     ${catkin_INCLUDE_DIRS}
-
+    ${catkin_PATH}/devel/include
 )
+#set(CMAKE_PREFIX_PATH /home/xd/catkin_ws/devel)
+
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
