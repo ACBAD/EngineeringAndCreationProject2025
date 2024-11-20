@@ -116,7 +116,7 @@ int main(int argc, char* argv[]) {
   sound_pub = node_handle.advertise<std_msgs::UInt8>("/sound_cmd", 2);
   ros::Subscriber vel_sub = node_handle.subscribe("/cmd_vel", 2, updateMotorAction);
   ros::Rate rate(20);
-  ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Info);
+  ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Debug);
 
   global_twist.linear.x = 0;
   global_twist.linear.y = 0;
