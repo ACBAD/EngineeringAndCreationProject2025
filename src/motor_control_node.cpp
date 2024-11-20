@@ -13,24 +13,19 @@
 ros::Publisher odom_pub;
 geometry_msgs::Twist global_twist;
 
-ssize_t tread(const int fd, void *buf, const size_t count, const int timeout_seconds) {
+ssize_t tread(const int fd, void *buf, const size_t count, const int timeout_ms) {
   pollfd fds{};
   fds.fd = fd;
   fds.events = POLLIN; // 关注是否可读
   // 以毫秒为单位设置超时
-  const int ret = poll(&fds, 1, timeout_seconds * 1000);
+  const int ret = poll(&fds, 1, timeout_ms);
   if (ret > 0) {
     if (fds.revents & POLLIN) {
       return read(fd, buf, count);
     }
-  } else if (ret == 0) {
-    // 超时
-    fprintf(stderr, "Read timeout\n");
-    return -2; // 或者返回一个定义的超时错误码
-  } else {
-    perror("poll");
-    return -3;
-  }
+  } else if (ret == 0)
+    return -2;
+  ROS_ERROR("Poll Error");
   return -1;
 }
 
@@ -102,10 +97,11 @@ void sendMotorAction() {
       return;
     odom_pub.publish(data);
   }
+  else if(read_count == -2)
+    ROS_WARN("Failed Receive motor data: Timeout");
   else
     ROS_WARN("Failed Receive motor data: read_count is %ld", read_count);
   close(read_sp);
-  usleep(1000);
 }
 
 int main(int argc, char* argv[]) {
