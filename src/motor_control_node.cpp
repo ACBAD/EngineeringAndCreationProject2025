@@ -84,17 +84,13 @@ void sendMotorAction() {
     eac_pkg::motor_data data;
     data.stamp = ros::Time::now();
     data.left_laps_p = convertNumber(motor_data, 3);
-    if (data.left_laps_p < 0)
-      return;
     data.left_laps_n = convertNumber(motor_data, 16);
-    if (data.left_laps_n < 0)
-      return;
     data.right_laps_n = convertNumber(motor_data, 29);
-    if (data.right_laps_n < 0)
-      return;
     data.right_laps_p = convertNumber(motor_data, 42);
-    if (data.right_laps_p < 0)
+    if (data.left_laps_p < 0 || data.left_laps_n < 0 || data.right_laps_n < 0 || data.right_laps_p < 0) {
+      ROS_WARN("Converting number Error");
       return;
+    }
     odom_pub.publish(data);
   }
   else if(read_count == -2)
