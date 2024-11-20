@@ -3,6 +3,7 @@
 #include <eac_pkg/motor_data.h>
 #include <unistd.h>
 #include <termios.h>
+#include <poll.h>
 #include <fcntl.h>
 #include <csignal>
 #define SERIAL_PORT "/dev/ttyS3"
@@ -11,6 +12,27 @@
 
 ros::Publisher odom_pub;
 geometry_msgs::Twist global_twist;
+
+ssize_t tread(const int fd, void *buf, const size_t count, const int timeout_seconds) {
+  pollfd fds{};
+  fds.fd = fd;
+  fds.events = POLLIN; // 关注是否可读
+  // 以毫秒为单位设置超时
+  const int ret = poll(&fds, 1, timeout_seconds * 1000);
+  if (ret > 0) {
+    if (fds.revents & POLLIN) {
+      return read(fd, buf, count);
+    }
+  } else if (ret == 0) {
+    // 超时
+    fprintf(stderr, "Read timeout\n");
+    return -2; // 或者返回一个定义的超时错误码
+  } else {
+    perror("poll");
+    return -3;
+  }
+  return -1;
+}
 
 void substring(const char *src, const int start, const int length, char* dest) {
   if (start >= 0 && length > 0 && start < strlen(src)) {
@@ -60,7 +82,7 @@ void sendMotorAction() {
     ROS_WARN("Failed send vel: %s, success_num is %ld", ctl_str, write_count);
   char motor_data[60];
   const int read_sp = open("/dev/ttyS3", O_RDWR | O_NOCTTY);
-  const ssize_t read_count = read(read_sp, motor_data, 60);
+  const ssize_t read_count = tread(read_sp, motor_data, 60, 1);
   if(read_count > 0) {
     motor_data[52] = 0;
     ROS_DEBUG("Receive raw motor data: %s", motor_data);
