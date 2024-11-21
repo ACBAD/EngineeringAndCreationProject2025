@@ -103,7 +103,6 @@ void sendAllArgs() {
   const ssize_t write_count = serial.send(vel_obj);
   if(write_count < 0)
     return;
-
   rapidjson::Document stm32_data = std::move(serial.tread(200));
   if(stm32_data.IsNull())
     return;

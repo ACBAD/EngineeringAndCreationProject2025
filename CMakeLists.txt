@@ -144,6 +144,7 @@ include_directories(
 ## The recommended prefix ensures that target names across packages don't collide
 add_executable(stm32_node src/stm32_node.cpp)
 add_executable(test_vel_ctl src/test_vel_ctl.cpp)
+add_executable(rapidjson_test src/rapidjson_test.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -156,9 +157,8 @@ add_executable(test_vel_ctl src/test_vel_ctl.cpp)
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
-target_include_directories(stm32_node PRIVATE
-  include
-)
+target_include_directories(stm32_node PRIVATE include)
+target_include_directories(rapidjson_test PRIVATE include)
 target_link_libraries(stm32_node ${catkin_LIBRARIES})
 add_dependencies(stm32_node eac_pkg_generate_messages_cpp)
 target_link_libraries(test_vel_ctl ${catkin_LIBRARIES})
