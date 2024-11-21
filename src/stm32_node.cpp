@@ -7,6 +7,8 @@
 #include <fcntl.h>
 #include <csignal>
 #include <rapidjson/document.h>
+#include <rapidjson/prettywriter.h>
+#include <std_msgs/String.h>
 #include <std_msgs/UInt8.h>
 #define SERIAL_PORT "/dev/ttyS3"
 #define MAX_LINEAR_SPEED 1.2
@@ -16,97 +18,113 @@
 ros::Publisher motor_pub;
 ros::Publisher sound_pub;
 geometry_msgs::Twist global_twist;
+std_msgs::UInt8 global_rail;
 
-ssize_t tread(const int fd, void *buf, const size_t count, const int timeout_ms) {
-  pollfd fds{};
-  fds.fd = fd;
-  fds.events = POLLIN; // 关注是否可读
-  // 以毫秒为单位设置超时
-  const int ret = poll(&fds, 1, timeout_ms);
-  if (ret > 0) {
-    if (fds.revents & POLLIN) {
-      return read(fd, buf, count);
-    }
-  } else if (ret == 0)
-    return -2;
-  ROS_ERROR("Poll Error");
-  return -1;
-}
-
-void substring(const char *src, const int start, const int length, char* dest) {
-  if (start >= 0 && length > 0 && start < strlen(src)) {
-    strncpy(dest, src + start, length);
-    dest[length] = '\0'; // 手动添加字符串结束符
-  } else {
-    dest[0] = '\0'; // 输入无效时返回空字符串
+class SerialDevice {
+  int serial_port = -1;
+public:
+  SerialDevice(){
+    serial_port = open("/dev/ttyS3", O_RDWR | O_NOCTTY);
   }
-}
-
-long long convertNumber(const char* motor_data, const int start) {
-  char temp_num_str[20];
-  errno = 0;
-  char* end;
-  substring(motor_data, start, 10, temp_num_str);
-  const long long temp_num = std::strtoll(temp_num_str, &end, 10);
-  if (errno == ERANGE)
-    ROS_ERROR("Error in converting %s : Out of range", motor_data);
-  else if (*end != '\0')
-    ROS_ERROR("Error in converting %s : Invalid number", motor_data);
-  else
-    return temp_num;
-  return -1;
-}
+  ~SerialDevice() {
+    if(serial_port < 0)
+      return;
+    close(serial_port);
+  }
+  rapidjson::Document tread(const int timeout_ms) const {
+    if(serial_port < 0) {
+      ROS_WARN("Read failed: serial not open");
+      return nullptr;
+    }
+    pollfd fds{};
+    fds.fd = serial_port;
+    fds.events = POLLIN; // 关注是否可读
+    // 以毫秒为单位设置超时
+    const int ret = poll(&fds, 1, timeout_ms);
+    if(ret <= 0) {
+      if (ret == 0)
+        ROS_WARN("Read failed: Wait timeout");
+      else
+        ROS_WARN("Read failed: Poll Error 2");
+      return nullptr;
+    }
+    if (!(fds.revents & POLLIN)) {
+      ROS_WARN("Read failed: Poll Error 1");
+      return nullptr;
+    }
+    char buffer[500];
+    const ssize_t read_count = read(serial_port, buffer, 500);
+    if(read_count < 0) {
+      ROS_WARN("Read failed: read count is %ld", read_count);
+      return nullptr;
+    }
+    ROS_DEBUG("Read count: %ld", read_count);
+    rapidjson::Document ret_d;
+    ret_d.SetObject();
+    if(ret_d.Parse(buffer).HasParseError()) {
+      ROS_WARN("Read failed: Parse failed, raw str is %s", buffer);
+      return nullptr;
+    }
+    ROS_DEBUG("Read raw str: %s", buffer);
+    return ret_d;
+  }
+  ssize_t send(const rapidjson::Document& d) const {
+    if(serial_port < 0)
+      return -10;
+    rapidjson::StringBuffer sb;
+    rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(sb);
+    d.Accept(writer);
+    const ssize_t write_count = write(serial_port, sb.GetString(), sb.GetSize());
+    if(write_count == sb.GetSize())
+      ROS_DEBUG("Send vel: %s", sb.GetString());
+    else
+      ROS_WARN("Failed send vel: %s, success_num is %ld", sb.GetString(), write_count);
+    return write_count;
+  }
+};
 
 void updateMotorAction(const geometry_msgs::Twist& msg) {
   global_twist = msg;
 }
 
-void sendMotorAction() {
+void updateRailLocation(const std_msgs::UInt8& msg) {
+  global_rail = msg;
+}
+
+void sendAllArgs() {
   const int x = std::min(static_cast<int>(global_twist.linear.x/MAX_LINEAR_SPEED*100), 100);
   const int r = std::min(static_cast<int>(global_twist.angular.z/MAX_ANG_SPEED*100), 100);
-  char ctl_str[100];
-  sprintf(ctl_str, "{X%c%03dR%c%03d",
-    global_twist.linear.x>=0?'+':'-', abs(x),
-    global_twist.angular.z>=0?'+':'-', abs(r)
-    );
-  const int write_sp = open("/dev/ttyS3", O_RDWR | O_NOCTTY);
-  if (write_sp < 0) {
-    std::cerr<<"Error opening serial port"<<std::endl;
-  }
-  const ssize_t write_count = write(write_sp, ctl_str, strlen(ctl_str));
-  close(write_sp);
-  if(write_count == strlen(ctl_str))
-    ROS_DEBUG("Send vel: %s, strlen:%lu", ctl_str, strlen(ctl_str));
-  else
-    ROS_WARN("Failed send vel: %s, success_num is %ld", ctl_str, write_count);
+  SerialDevice serial;
+  rapidjson::Document vel_obj;
+  vel_obj.SetObject();
+  vel_obj.AddMember("X", x, vel_obj.GetAllocator());
+  vel_obj.AddMember("R", r, vel_obj.GetAllocator());
+  vel_obj.AddMember("Rail", global_rail.data, vel_obj.GetAllocator());
+  const ssize_t write_count = serial.send(vel_obj);
+  if(write_count < 0)
+    return;
 
-  char motor_data[READ_STR_LENGTH + 20];
-  const int read_sp = open("/dev/ttyS3", O_RDWR | O_NOCTTY);
-  const ssize_t read_count = tread(read_sp, motor_data, READ_STR_LENGTH + 20, 200);
-  if(read_count > 0) {
-    motor_data[READ_STR_LENGTH] = 0;
-    ROS_DEBUG("Receive raw motor data: %s", motor_data);
-    eac_pkg::motor_data data;
-    data.stamp = ros::Time::now();
-    data.left_laps_p = convertNumber(motor_data, 3);
-    data.left_laps_n = convertNumber(motor_data, 16);
-    data.right_laps_n = convertNumber(motor_data, 29);
-    data.right_laps_p = convertNumber(motor_data, 42);
-    if (data.left_laps_p < 0 || data.left_laps_n < 0 || data.right_laps_n < 0 || data.right_laps_p < 0) {
-      ROS_WARN("Converting number Error");
-      return;
-    }
-    motor_pub.publish(data);
-    std_msgs::UInt8 sound_cmd;
-    sound_cmd.data = motor_data[52] - '0';
-    sound_pub.publish(sound_cmd);
+  rapidjson::Document stm32_data = std::move(serial.tread(200));
+  if(stm32_data.IsNull())
+    return;
+  if(!stm32_data.HasMember("Laps") || !stm32_data["Laps"].IsArray() || stm32_data["Laps"].GetArray().Size() != 4) {
+    ROS_WARN("Decode error: Laps array format wrong");
+    return;
   }
-  else if(read_count == -2)
-    ROS_WARN("Failed Receive motor data: Timeout");
-  else
-    ROS_WARN("Failed Receive motor data: read_count is %ld", read_count);
-  close(read_sp);
-  usleep(1000);
+  eac_pkg::motor_data data;
+  data.stamp = ros::Time::now();
+  data.left_laps_p = stm32_data["Laps"].GetArray()[0].GetUint64();
+  data.left_laps_n = stm32_data["Laps"].GetArray()[1].GetUint64();
+  data.right_laps_n = stm32_data["Laps"].GetArray()[2].GetUint64();
+  data.right_laps_p = stm32_data["Laps"].GetArray()[3].GetUint64();
+  motor_pub.publish(data);
+  if(!stm32_data.HasMember("SC") || !stm32_data["SC"].IsString()) {
+    ROS_WARN("Decode error: SC cmd format wrong");
+    return;
+  }
+  std_msgs::String sound_cmd;
+  sound_cmd.data = stm32_data["SC"].GetString();
+  sound_pub.publish(sound_cmd);
 }
 
 int main(int argc, char* argv[]) {
@@ -117,6 +135,7 @@ int main(int argc, char* argv[]) {
   motor_pub = node_handle.advertise<eac_pkg::motor_data>("/motor_data", 2);
   sound_pub = node_handle.advertise<std_msgs::UInt8>("/sound_cmd", 2);
   ros::Subscriber vel_sub = node_handle.subscribe("/cmd_vel", 2, updateMotorAction);
+  ros::Subscriber rail_sub = node_handle.subscribe("/rail_cmd", 2, updateRailLocation);
   ros::Rate rate(20);
   ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Debug);
 
@@ -128,7 +147,7 @@ int main(int argc, char* argv[]) {
   global_twist.angular.z = 0;
   while (ros::ok()) {
     ros::spinOnce();
-    sendMotorAction();
+    sendAllArgs();
     rate.sleep();
   }
   return 0;
