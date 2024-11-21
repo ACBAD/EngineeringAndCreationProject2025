@@ -65,8 +65,8 @@ void sendMotorAction() {
   const int r = std::min(static_cast<int>(global_twist.angular.z/MAX_ANG_SPEED*100), 100);
   char ctl_str[100];
   sprintf(ctl_str, "{X%c%03dR%c%03d",
-    global_twist.linear.x>=0?'+':'-', x,
-    global_twist.angular.z>=0?'+':'-', r
+    global_twist.linear.x>=0?'+':'-', abs(x),
+    global_twist.angular.z>=0?'+':'-', abs(r)
     );
   const int write_sp = open("/dev/ttyS3", O_RDWR | O_NOCTTY);
   if (write_sp < 0) {
