@@ -6,6 +6,7 @@
 #include <poll.h>
 #include <fcntl.h>
 #include <csignal>
+#include <rapidjson/document.h>
 #include <std_msgs/UInt8.h>
 #define SERIAL_PORT "/dev/ttyS3"
 #define MAX_LINEAR_SPEED 1.2

@@ -128,7 +128,6 @@ include_directories(
 )
 #set(CMAKE_PREFIX_PATH /home/xd/catkin_ws/devel)
 
-
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
 #   src/${PROJECT_NAME}/EngineeringAndCreationProject.cpp
@@ -157,6 +156,9 @@ add_executable(test_vel_ctl src/test_vel_ctl.cpp)
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(stm32_node ${catkin_LIBRARIES})
+target_include_directories(stm32_node PRIVATE
+  ${CMAKE_SOURCE_DIR}/include
+)
 add_dependencies(stm32_node eac_pkg_generate_messages_cpp)
 target_link_libraries(test_vel_ctl ${catkin_LIBRARIES})
 
