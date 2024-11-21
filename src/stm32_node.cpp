@@ -8,7 +8,6 @@
 #include <csignal>
 #include <rapidjson/document.h>
 #include <rapidjson/prettywriter.h>
-#include <std_msgs/String.h>
 #include <std_msgs/UInt8.h>
 #define SERIAL_PORT "/dev/ttyS3"
 #define MAX_LINEAR_SPEED 1.2
@@ -135,12 +134,12 @@ void sendAllArgs() {
     ROS_WARN("Decode error: SC cmd not exist");
     return;
   }
-  if(!stm32_data["SC"].IsString()) {
+  if(!stm32_data["SC"].IsUint()) {
     ROS_WARN("Decode error: SC cmd type error");
     return;
   }
-  std_msgs::String sound_cmd;
-  sound_cmd.data = stm32_data["SC"].GetString();
+  std_msgs::UInt8 sound_cmd;
+  sound_cmd.data = stm32_data["SC"].GetUint();
   sound_pub.publish(sound_cmd);
 }
 
