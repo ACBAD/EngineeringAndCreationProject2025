@@ -107,9 +107,23 @@ void sendAllArgs() {
   rapidjson::Document stm32_data = std::move(serial.tread(200));
   if(stm32_data.IsNull())
     return;
-  if(!stm32_data.HasMember("Laps") || !stm32_data["Laps"].IsArray() || stm32_data["Laps"].GetArray().Size() != 4) {
-    ROS_WARN("Decode error: Laps array format wrong");
+  if(!stm32_data.HasMember("Laps")) {
+    ROS_WARN("Decode error: Laps not exist");
     return;
+  }
+  if(!stm32_data["Laps"].IsArray()) {
+    ROS_WARN("Decode error: Laps is not array");
+    return;
+  }
+  if(stm32_data["Laps"].GetArray().Size() != 4) {
+    ROS_WARN("Decode error: Laps length is not 4");
+    return;
+  }
+  for(int i = 0; i < 4; i++) {
+    if(!stm32_data["Laps"].GetArray()[i].IsUint64()) {
+      ROS_WARN("Decode error: Laps %d is not uint", i);
+      return;
+    }
   }
   eac_pkg::motor_data data;
   data.stamp = ros::Time::now();
@@ -118,8 +132,12 @@ void sendAllArgs() {
   data.right_laps_n = stm32_data["Laps"].GetArray()[2].GetUint64();
   data.right_laps_p = stm32_data["Laps"].GetArray()[3].GetUint64();
   motor_pub.publish(data);
-  if(!stm32_data.HasMember("SC") || !stm32_data["SC"].IsString()) {
-    ROS_WARN("Decode error: SC cmd format wrong");
+  if(!stm32_data.HasMember("SC")) {
+    ROS_WARN("Decode error: SC cmd not exist");
+    return;
+  }
+  if(!stm32_data["SC"].IsString()) {
+    ROS_WARN("Decode error: SC cmd type error");
     return;
   }
   std_msgs::String sound_cmd;
