@@ -23,7 +23,8 @@ class SerialDevice {
   int serial_port = -1;
 public:
   SerialDevice(){
-    serial_port = open("/dev/ttyS3", O_RDWR | O_NOCTTY);
+    serial_port = open(SERIAL_PORT, O_RDWR | O_NOCTTY);
+    ROS_WARN("Serial Open");
   }
   ~SerialDevice() {
     if(serial_port < 0)
@@ -101,7 +102,7 @@ void sendAllArgs(const SerialDevice& sd) {
   const ssize_t write_count = sd.send(vel_obj);
   if(write_count < 0)
     return;
-  rapidjson::Document stm32_data = std::move(sd.tread(200));
+  rapidjson::Document stm32_data = std::move(sd.tread(500));
   if(stm32_data.IsNull())
     return;
   if(!stm32_data.HasMember("Laps")) {
