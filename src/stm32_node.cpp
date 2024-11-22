@@ -3,7 +3,7 @@
 #include <eac_pkg/motor_data.h>
 #include <unistd.h>
 #include <termios.h>
-#include <poll.h>
+#include <sys/ioctl.h>
 #include <fcntl.h>
 #include <csignal>
 #include <rapidjson/document.h>
@@ -25,6 +25,9 @@ public:
   SerialDevice(){
     serial_port = open(SERIAL_PORT, O_RDWR | O_NOCTTY | O_NONBLOCK);
     ROS_WARN("Serial Open");
+    int size = 8192; // 设置为 8KB
+    ioctl(serial_port, TIOCSWINSZ, &size);
+    ROS_WARN("Set buffer size: %d", size);
   }
   ~SerialDevice() {
     if(serial_port < 0)
