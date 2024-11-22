@@ -71,6 +71,7 @@ public:
   ssize_t send(const rapidjson::Document& d) const {
     if(serial_port < 0)
       return -10;
+    tcflush(serial_port, TCIOFLUSH);
     rapidjson::StringBuffer sb;
     rapidjson::Writer<rapidjson::StringBuffer> writer(sb);
     d.Accept(writer);
