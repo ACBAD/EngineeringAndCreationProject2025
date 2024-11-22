@@ -171,7 +171,7 @@ int main(int argc, char* argv[]) {
   ros::Subscriber vel_sub = node_handle.subscribe("/cmd_vel", 2, updateMotorAction);
   ros::Subscriber rail_sub = node_handle.subscribe("/rail_cmd", 2, updateRailLocation);
   ros::Rate rate(20);
-  ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Debug);
+  ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Info);
   // ReSharper disable once CppTooWideScope
   const SerialDevice serial_device;
   global_twist.linear.x = 0;
