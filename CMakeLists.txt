@@ -18,6 +18,7 @@ find_package(catkin REQUIRED COMPONENTS
     sensor_msgs
     std_msgs
     message_generation
+    cv_bridge
 )
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -110,7 +111,7 @@ generate_messages(
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES EngineeringAndCreationProject
-    CATKIN_DEPENDS actionlib move_base_msgs nav_msgs roscpp rospy sensor_msgs std_msgs message_runtime
+    CATKIN_DEPENDS actionlib move_base_msgs nav_msgs roscpp rospy sensor_msgs std_msgs message_runtime cv_bridge
 #  DEPENDS system_lib
 )
 
