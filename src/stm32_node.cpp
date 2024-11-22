@@ -23,7 +23,7 @@ class SerialDevice {
   int serial_port = -1;
 public:
   SerialDevice(){
-    serial_port = open(SERIAL_PORT, O_RDWR | O_NOCTTY);
+    serial_port = open(SERIAL_PORT, O_RDWR | O_NOCTTY | O_NONBLOCK);
     ROS_WARN("Serial Open");
   }
   ~SerialDevice() {
@@ -36,25 +36,25 @@ public:
       ROS_WARN("Read failed: serial not open");
       return nullptr;
     }
-    pollfd fds{};
-    fds.fd = serial_port;
-    fds.events = POLLIN; // 关注是否可读
-    // 以毫秒为单位设置超时
-    const int ret = poll(&fds, 1, timeout_ms);
-    if(ret <= 0) {
-      if (ret == 0)
-        ROS_WARN("Read failed: Wait timeout");
-      else
-        ROS_WARN("Read failed: Poll Error 2");
-      return nullptr;
-    }
-    if (!(fds.revents & POLLIN)) {
-      ROS_WARN("Read failed: Poll Error 1");
-      return nullptr;
-    }
+    // pollfd fds{};
+    // fds.fd = serial_port;
+    // fds.events = POLLIN; // 关注是否可读
+    // // 以毫秒为单位设置超时
+    // const int ret = poll(&fds, 1, timeout_ms);
+    // if(ret <= 0) {
+    //   if (ret == 0)
+    //     ROS_WARN("Read failed: Wait timeout");
+    //   else
+    //     ROS_WARN("Read failed: Poll Error 2");
+    //   return nullptr;
+    // }
+    // if (!(fds.revents & POLLIN)) {
+    //   ROS_WARN("Read failed: Poll Error 1");
+    //   return nullptr;
+    // }
     char buffer[500];
     const ssize_t read_count = read(serial_port, buffer, 500);
-    if(read_count < 0) {
+    if(read_count <= 0) {
       ROS_WARN("Read failed: read count is %ld", read_count);
       return nullptr;
     }
