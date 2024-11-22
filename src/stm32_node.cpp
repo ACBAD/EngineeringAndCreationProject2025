@@ -66,7 +66,7 @@ public:
     rapidjson::Document ret_d;
     ret_d.SetObject();
     if(ret_d.Parse(buffer).HasParseError()) {
-      ROS_WARN("Read failed: Parse failed, raw str is %s", buffer);
+      ROS_WARN("Read failed: Parse failed, raw str is (%s)", buffer);
       return nullptr;
     }
     ROS_DEBUG("Read raw str: %s", buffer);
