@@ -13,7 +13,7 @@
 #define SERIAL_PORT "/dev/ttyS3"
 #define MAX_LINEAR_SPEED 1.2
 #define MAX_ANG_SPEED 1
-#define READ_STR_LENGTH 53
+#define READ_STR_LENGTH 500
 
 ros::Publisher motor_pub;
 ros::Publisher sound_pub;
@@ -56,8 +56,8 @@ public:
       ROS_WARN("Read failed: Poll Error 1");
       return nullptr;
     }
-    char buffer[500];
-    const ssize_t read_count = read(serial_port, buffer, 500);
+    char buffer[READ_STR_LENGTH];
+    const ssize_t read_count = read(serial_port, buffer, READ_STR_LENGTH);
     if(read_count <= 0) {
       ROS_WARN("Read failed: read count is %ld", read_count);
       return nullptr;
@@ -66,7 +66,22 @@ public:
     rapidjson::Document ret_d;
     ret_d.SetObject();
     if(ret_d.Parse(buffer).HasParseError()) {
-      ROS_WARN("Read failed: Parse failed, raw str is (%s)", buffer);
+      ROS_INFO("Read failed: Parse failed, try to extract json");
+      char* left_brace = strchr(buffer, '{');
+      char* right_brace = strchr(buffer, '}');
+      if(left_brace == nullptr)
+        ROS_WARN("Read failed: extract failed, { not exist , raw str is %s", buffer);
+      else if(right_brace == nullptr)
+        ROS_WARN("Read failed: extract failed, } not exist , raw str is %s", buffer);
+      else {
+        *(right_brace + 1) = 0;
+        ret_d.SetObject();
+        if(ret_d.Parse(left_brace).HasParseError()) {
+          ROS_WARN("Read failed: extract failed, total failed , raw str is %s", buffer);
+          return nullptr;
+        }
+        return ret_d;
+      }
       return nullptr;
     }
     ROS_DEBUG("Read raw str: %s", buffer);
