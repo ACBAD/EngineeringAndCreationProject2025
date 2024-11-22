@@ -71,7 +71,7 @@ public:
     if(serial_port < 0)
       return -10;
     rapidjson::StringBuffer sb;
-    rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(sb);
+    rapidjson::Writer<rapidjson::StringBuffer> writer(sb);
     d.Accept(writer);
     const ssize_t write_count = write(serial_port, sb.GetString(), sb.GetSize());
     if(write_count == sb.GetSize())
