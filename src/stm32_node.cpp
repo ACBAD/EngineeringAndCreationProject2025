@@ -6,6 +6,7 @@
 #include <sys/ioctl.h>
 #include <fcntl.h>
 #include <csignal>
+#include <poll.h>
 #include <rapidjson/document.h>
 #include <rapidjson/prettywriter.h>
 #include <std_msgs/UInt8.h>
