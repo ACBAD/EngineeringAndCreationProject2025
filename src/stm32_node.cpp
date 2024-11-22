@@ -67,7 +67,7 @@ public:
     ret_d.SetObject();
     if(ret_d.Parse(buffer).HasParseError()) {
       ROS_INFO("Read failed: Parse failed, try to extract json");
-      char* left_brace = strchr(buffer, '{');
+      const char* left_brace = strchr(buffer, '{');
       char* right_brace = strchr(buffer, '}');
       if(left_brace == nullptr)
         ROS_WARN("Read failed: extract failed, { not exist , raw str is %s", buffer);
@@ -80,9 +80,7 @@ public:
           ROS_WARN("Read failed: extract failed, total failed , raw str is %s", buffer);
           return nullptr;
         }
-        return ret_d;
       }
-      return nullptr;
     }
     ROS_DEBUG("Read raw str: %s", buffer);
     return ret_d;
