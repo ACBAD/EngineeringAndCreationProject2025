@@ -96,21 +96,18 @@ void updateRailLocation(const std_msgs::UInt8& msg) {
   global_rail = msg;
 }
 
-void sendAllArgs() {
+void sendAllArgs(const SerialDevice& sd) {
   const int x = std::min(static_cast<int>(global_twist.linear.x/MAX_LINEAR_SPEED*100), 100);
   const int r = std::min(static_cast<int>(global_twist.angular.z/MAX_ANG_SPEED*100), 100);
-  SerialDevice send_serial;
   rapidjson::Document vel_obj;
   vel_obj.SetObject();
   vel_obj.AddMember("X", x, vel_obj.GetAllocator());
   vel_obj.AddMember("R", r, vel_obj.GetAllocator());
   vel_obj.AddMember("Rail", global_rail.data, vel_obj.GetAllocator());
-  const ssize_t write_count = send_serial.send(vel_obj);
+  const ssize_t write_count = sd.send(vel_obj);
   if(write_count < 0)
     return;
-  send_serial.~SerialDevice();
-  SerialDevice read_serial;
-  rapidjson::Document stm32_data = std::move(read_serial.tread(200));
+  rapidjson::Document stm32_data = std::move(sd.tread(200));
   if(stm32_data.IsNull())
     return;
   if(!stm32_data.HasMember("Laps")) {
@@ -162,7 +159,8 @@ int main(int argc, char* argv[]) {
   ros::Subscriber rail_sub = node_handle.subscribe("/rail_cmd", 2, updateRailLocation);
   ros::Rate rate(20);
   ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Debug);
-
+  // ReSharper disable once CppTooWideScope
+  const SerialDevice serial_device;
   global_twist.linear.x = 0;
   global_twist.linear.y = 0;
   global_twist.linear.z = 0;
@@ -171,7 +169,7 @@ int main(int argc, char* argv[]) {
   global_twist.angular.z = 0;
   while (ros::ok()) {
     ros::spinOnce();
-    sendAllArgs();
+    sendAllArgs(serial_device);
     rate.sleep();
   }
   return 0;
