@@ -145,8 +145,11 @@ void sendAllArgs(const SerialDevice& sd) {
   }
   total_right += static_cast<int16_t>(stm32_data["R"].GetUint64());
   total_left += static_cast<int16_t>(stm32_data["L"].GetUint64());
-  rw_pub.publish(total_right);
-  lw_pub.publish(total_left);
+  std_msgs::Int32 R,L;
+  R.data = total_right;
+  L.data = total_left;
+  rw_pub.publish(R);
+  lw_pub.publish(L);
   if(!stm32_data.HasMember("SC")) {
     ROS_WARN("Decode error: SC cmd not exist");
     return;
