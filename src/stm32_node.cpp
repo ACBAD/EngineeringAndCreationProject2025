@@ -9,7 +9,7 @@
 #include <rapidjson/document.h>
 #include <rapidjson/prettywriter.h>
 #include <std_msgs/UInt8.h>
-#include <std_msgs/UInt32.h>
+#include <std_msgs/Int32.h>
 #define SERIAL_PORT "/dev/ttyS3"
 #define MAX_LINEAR_SPEED 1.2
 #define MAX_ANG_SPEED 1
@@ -142,7 +142,7 @@ void sendAllArgs(const SerialDevice& sd) {
     return;
   }
 
-  std_msgs::UInt32 rWheel, lWheel;
+  std_msgs::Int32 rWheel, lWheel;
   rWheel.data = static_cast<int16_t>(stm32_data["R"].GetUint64());
   lWheel.data = static_cast<int16_t>(stm32_data["L"].GetUint64());
   rw_pub.publish(rWheel);
@@ -166,8 +166,8 @@ int main(int argc, char* argv[]) {
   ros::init(argc, argv, "stm32_node");
   ros::NodeHandle node_handle;
 
-  rw_pub = node_handle.advertise<std_msgs::UInt32>("/rwheel_ticks", 2);
-  lw_pub = node_handle.advertise<std_msgs::UInt32>("/lwheel_ticks", 2);
+  rw_pub = node_handle.advertise<std_msgs::Int32>("/rwheel_ticks", 2);
+  lw_pub = node_handle.advertise<std_msgs::Int32>("/lwheel_ticks", 2);
   sound_pub = node_handle.advertise<std_msgs::UInt8>("/sound_cmd", 2);
   ros::Subscriber vel_sub = node_handle.subscribe("/cmd_vel", 2, updateMotorAction);
   ros::Subscriber rail_sub = node_handle.subscribe("/rail_cmd", 2, updateRailLocation);
