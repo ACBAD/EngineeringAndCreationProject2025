@@ -146,6 +146,9 @@ include_directories(
 add_executable(stm32_node src/stm32_node.cpp)
 add_executable(test_vel_ctl src/test_vel_ctl.cpp)
 add_executable(rapidjson_test src/rapidjson_test.cpp)
+add_executable(center_node src/center_node.cpp)
+add_executable(recognize_node src/recognize_node.cpp)
+add_executable(sound_node src/sound_node.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -163,6 +166,10 @@ target_include_directories(rapidjson_test PRIVATE include)
 target_link_libraries(stm32_node ${catkin_LIBRARIES})
 add_dependencies(stm32_node eac_pkg_generate_messages_cpp)
 target_link_libraries(test_vel_ctl ${catkin_LIBRARIES})
+target_link_libraries(center_node ${catkin_LIBRARIES})
+add_dependencies(center_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(recognize_node ${catkin_LIBRARIES})
+target_link_libraries(sound_node ${catkin_LIBRARIES})
 
 #############
 ## Install ##
