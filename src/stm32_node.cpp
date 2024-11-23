@@ -143,8 +143,8 @@ void sendAllArgs(const SerialDevice& sd) {
   }
 
   std_msgs::UInt32 rWheel, lWheel;
-  rWheel.data = stm32_data["R"].GetUint64();
-  lWheel.data = stm32_data["L"].GetUint64();
+  rWheel.data = static_cast<int16_t>(stm32_data["R"].GetUint64());
+  lWheel.data = static_cast<int16_t>(stm32_data["L"].GetUint64());
   rw_pub.publish(rWheel);
   lw_pub.publish(lWheel);
   if(!stm32_data.HasMember("SC")) {
