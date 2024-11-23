@@ -11,8 +11,6 @@ bool playAudio(const char* filepath) {
     int dir;
     snd_pcm_uframes_t frames;
     int channels = 2;
-    int bufferSize = 16384;
-    char* buffer;
     if (snd_pcm_open(&pcmHandle, SOUND_DEVICE, SND_PCM_STREAM_PLAYBACK, 0) < 0) {
         ROS_ERROR("Error: Unable to open PCM device");
         return false;
@@ -31,8 +29,8 @@ bool playAudio(const char* filepath) {
         return false;
     }
     snd_pcm_hw_params_get_period_size(params, &frames, &dir);
-    bufferSize = frames * channels * 2;
-    buffer = new char[bufferSize];
+    int bufferSize = frames * channels * 2;
+    char* buffer = new char[bufferSize];
     std::ifstream audioFile(filepath, std::ios::binary);
     if (!audioFile) {
         ROS_ERROR("Error: Unable to open audio file");
