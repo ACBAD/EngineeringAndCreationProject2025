@@ -67,7 +67,7 @@ void playCallback(const std_msgs::UInt8& msg) {
   if (msg.data == 0)
     playAudio("/home/khadas/sound/start.wav");
   else if(msg.data == 1)
-    playAudio("/home/khadas/reach.wav");
+    playAudio("/home/khadas/sound/reach.wav");
   else if(msg.data == 2)
     playAudio("/home/khadas/sound/cube.wav");
   else if(msg.data == 3)
