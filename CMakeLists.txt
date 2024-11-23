@@ -169,7 +169,10 @@ target_link_libraries(test_vel_ctl ${catkin_LIBRARIES})
 target_link_libraries(center_node ${catkin_LIBRARIES})
 add_dependencies(center_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(recognize_node ${catkin_LIBRARIES})
-target_link_libraries(sound_node ${catkin_LIBRARIES})
+target_link_libraries(sound_node
+    ${catkin_LIBRARIES}
+    asound
+)
 
 #############
 ## Install ##
