@@ -54,10 +54,10 @@ find_package(catkin REQUIRED COMPONENTS
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 ## Generate messages in the 'msg' folder
-add_message_files(
-    FILES
-    motor_data.msg
-)
+#add_message_files(
+#    FILES
+#    motor_data.msg
+#)
 
 ## Generate services in the 'srv' folder
 # add_service_files(
@@ -74,10 +74,10 @@ add_message_files(
 # )
 
 ## Generate added messages and services with any dependencies listed here
-generate_messages(
-    DEPENDENCIES
-    std_msgs
-)
+#generate_messages(
+#    DEPENDENCIES
+#    std_msgs
+#)
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -164,7 +164,7 @@ add_executable(sound_node src/sound_node.cpp)
 target_include_directories(stm32_node PRIVATE include)
 target_include_directories(rapidjson_test PRIVATE include)
 target_link_libraries(stm32_node ${catkin_LIBRARIES})
-add_dependencies(stm32_node eac_pkg_generate_messages_cpp)
+#add_dependencies(stm32_node eac_pkg_generate_messages_cpp)
 target_link_libraries(test_vel_ctl ${catkin_LIBRARIES})
 target_link_libraries(center_node ${catkin_LIBRARIES})
 add_dependencies(center_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})

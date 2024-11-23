@@ -1,6 +1,5 @@
 #include <ros/ros.h>
 #include <geometry_msgs/Twist.h>
-#include <eac_pkg/motor_data.h>
 #include <unistd.h>
 #include <termios.h>
 #include <sys/ioctl.h>
@@ -10,12 +9,14 @@
 #include <rapidjson/document.h>
 #include <rapidjson/prettywriter.h>
 #include <std_msgs/UInt8.h>
+#include <std_msgs/UInt32.h>
 #define SERIAL_PORT "/dev/ttyS3"
 #define MAX_LINEAR_SPEED 1.2
 #define MAX_ANG_SPEED 1
 #define READ_STR_LENGTH 500
 
-ros::Publisher motor_pub;
+ros::Publisher rw_pub;
+ros::Publisher lw_pub;
 ros::Publisher sound_pub;
 geometry_msgs::Twist global_twist;
 std_msgs::UInt8 global_rail;
@@ -123,31 +124,29 @@ void sendAllArgs(const SerialDevice& sd) {
   rapidjson::Document stm32_data = std::move(sd.tread(200));
   if(stm32_data.IsNull())
     return;
-  if(!stm32_data.HasMember("Laps")) {
-    ROS_WARN("Decode error: Laps not exist");
+
+  if(!stm32_data.HasMember("R")) {
+    ROS_WARN("Decode error: R not exist");
     return;
   }
-  if(!stm32_data["Laps"].IsArray()) {
-    ROS_WARN("Decode error: Laps is not array");
+  if(!stm32_data.HasMember("L")) {
+    ROS_WARN("Decode error: L not exist");
     return;
   }
-  if(stm32_data["Laps"].GetArray().Size() != 4) {
-    ROS_WARN("Decode error: Laps length is not 4");
+  if(!stm32_data["R"].IsUint64()) {
+    ROS_WARN("Decode error: R is not Uint64");
     return;
   }
-  for(int i = 0; i < 4; i++) {
-    if(!stm32_data["Laps"].GetArray()[i].IsUint64()) {
-      ROS_WARN("Decode error: Laps %d is not uint", i);
-      return;
-    }
+  if(!stm32_data["L"].IsUint64()) {
+    ROS_WARN("Decode error: L is not Uint64");
+    return;
   }
-  eac_pkg::motor_data data;
-  data.stamp = ros::Time::now();
-  data.left_laps_p = stm32_data["Laps"].GetArray()[0].GetUint64();
-  data.left_laps_n = stm32_data["Laps"].GetArray()[1].GetUint64();
-  data.right_laps_n = stm32_data["Laps"].GetArray()[2].GetUint64();
-  data.right_laps_p = stm32_data["Laps"].GetArray()[3].GetUint64();
-  motor_pub.publish(data);
+
+  std_msgs::UInt32 rWheel, lWheel;
+  rWheel.data = stm32_data["R"].GetUint64();
+  lWheel.data = stm32_data["L"].GetUint64();
+  rw_pub.publish(rWheel);
+  lw_pub.publish(lWheel);
   if(!stm32_data.HasMember("SC")) {
     ROS_WARN("Decode error: SC cmd not exist");
     return;
@@ -164,9 +163,11 @@ void sendAllArgs(const SerialDevice& sd) {
 int main(int argc, char* argv[]) {
 
   // ROS init
-  ros::init(argc, argv, "motor_control_node");
+  ros::init(argc, argv, "stm32_node");
   ros::NodeHandle node_handle;
-  motor_pub = node_handle.advertise<eac_pkg::motor_data>("/motor_data", 2);
+
+  rw_pub = node_handle.advertise<std_msgs::UInt32>("/rwheel_ticks", 2);
+  lw_pub = node_handle.advertise<std_msgs::UInt32>("/lwheel_ticks", 2);
   sound_pub = node_handle.advertise<std_msgs::UInt8>("/sound_cmd", 2);
   ros::Subscriber vel_sub = node_handle.subscribe("/cmd_vel", 2, updateMotorAction);
   ros::Subscriber rail_sub = node_handle.subscribe("/rail_cmd", 2, updateRailLocation);
