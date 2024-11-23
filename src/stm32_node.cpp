@@ -20,6 +20,8 @@ ros::Publisher lw_pub;
 ros::Publisher sound_pub;
 geometry_msgs::Twist global_twist;
 std_msgs::UInt8 global_rail;
+int32_t total_right = 0;
+int32_t total_left = 0;
 
 class SerialDevice {
   int serial_port = -1;
@@ -141,12 +143,10 @@ void sendAllArgs(const SerialDevice& sd) {
     ROS_WARN("Decode error: L is not Uint64");
     return;
   }
-
-  std_msgs::Int32 rWheel, lWheel;
-  rWheel.data = static_cast<int16_t>(stm32_data["R"].GetUint64());
-  lWheel.data = static_cast<int16_t>(stm32_data["L"].GetUint64());
-  rw_pub.publish(rWheel);
-  lw_pub.publish(lWheel);
+  total_right += static_cast<int16_t>(stm32_data["R"].GetUint64());
+  total_left += static_cast<int16_t>(stm32_data["L"].GetUint64());
+  rw_pub.publish(total_right);
+  lw_pub.publish(total_left);
   if(!stm32_data.HasMember("SC")) {
     ROS_WARN("Decode error: SC cmd not exist");
     return;
