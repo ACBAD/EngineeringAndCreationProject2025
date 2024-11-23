@@ -2,7 +2,7 @@
 #include <std_msgs/UInt8.h>
 #include <fstream>
 #include <alsa/asoundlib.h>
-#define SOUND_DEVICE "hw:1,0"
+#define SOUND_DEVICE "hw:2,0"
 
 bool playAudio(const char* filepath) {
   snd_pcm_t* pcmHandle;
