@@ -23,6 +23,54 @@ std_msgs::UInt8 global_rail;
 int32_t total_right = 0;
 int32_t total_left = 0;
 
+template <typename T>
+class JsonConversion;
+template <>
+class JsonConversion <uint64_t> {
+  uint64_t value = 0;
+public:
+  JsonConversion() = default;
+  operator uint64_t() const {return value;}
+  bool convert(const rapidjson::Document& d, const char* name) {
+    if (!d.HasMember(name) || !d[name].IsInt64()) {
+      ROS_WARN("Decode error: decoding %s error, except int64", name);
+      return false;
+    }
+    value = d[name].GetInt64();
+    return true;
+  }
+};
+template <>
+class JsonConversion <double> {
+  double value = 0;
+public:
+  JsonConversion() = default;
+  operator double() const {return value;}
+  bool convert(const rapidjson::Document& d, const char* name) {
+    if (!d.HasMember(name) || !d[name].IsDouble()) {
+      ROS_WARN("Decode error: decoding %s error, except double", name);
+      return false;
+    }
+    value = d[name].GetDouble();
+    return true;
+  }
+};
+template <>
+class JsonConversion <std::string> {
+  std::string value;
+public:
+  JsonConversion() = default;
+  operator std::string() {return value;}
+  bool convert(const rapidjson::Document& d, const char* name) {
+    if (!d.HasMember(name) || !d[name].IsString()) {
+      ROS_WARN("Decode error: decoding %s error, except string", name);
+      return false;
+    }
+    value = std::move(d[name].GetString());
+    return true;
+  }
+};
+
 class SerialDevice {
   int serial_port = -1;
 public:
@@ -125,25 +173,13 @@ void sendAllArgs(const SerialDevice& sd) {
   rapidjson::Document stm32_data = std::move(sd.tread(200));
   if(stm32_data.IsNull())
     return;
-
-  if(!stm32_data.HasMember("R")) {
-    ROS_WARN("Decode error: R not exist");
+  JsonConversion<uint64_t> jc;
+  if(!jc.convert(stm32_data, "R"))
     return;
-  }
-  if(!stm32_data.HasMember("L")) {
-    ROS_WARN("Decode error: L not exist");
+  total_right += static_cast<int64_t>(jc);
+  if(!jc.convert(stm32_data, "L"))
     return;
-  }
-  if(!stm32_data["R"].IsUint64()) {
-    ROS_WARN("Decode error: R is not Uint64");
-    return;
-  }
-  if(!stm32_data["L"].IsUint64()) {
-    ROS_WARN("Decode error: L is not Uint64");
-    return;
-  }
-  total_right += static_cast<int16_t>(stm32_data["R"].GetUint64());
-  total_left -= static_cast<int16_t>(stm32_data["L"].GetUint64());
+  total_left -= static_cast<int64_t>(jc);
   std_msgs::Int32 R,L;
   R.data = total_right;
   L.data = total_left;
