@@ -29,7 +29,7 @@ public:
   SerialDevice(){
     serial_port = open(SERIAL_PORT, O_RDWR | O_NOCTTY);
     ROS_WARN("Serial Open");
-    int size = 8192; // 设置为 8KB
+    int size = 8192;
     ioctl(serial_port, TIOCSWINSZ, &size);
     ROS_WARN("Set buffer size: %d", size);
   }
@@ -119,7 +119,6 @@ void sendAllArgs(const SerialDevice& sd) {
   vel_obj.SetObject();
   vel_obj.AddMember("X", x, vel_obj.GetAllocator());
   vel_obj.AddMember("R", r, vel_obj.GetAllocator());
-  vel_obj.AddMember("Rail", global_rail.data, vel_obj.GetAllocator());
   const ssize_t write_count = sd.send(vel_obj);
   if(write_count < 0)
     return;
