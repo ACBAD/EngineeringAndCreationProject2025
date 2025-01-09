@@ -146,6 +146,7 @@ include_directories(
 add_executable(stm32_node src/stm32_node.cpp)
 add_executable(test_vel_ctl src/test_vel_ctl.cpp)
 add_executable(rapidjson_test src/rapidjson_test.cpp)
+add_executable(main_node src/main_node.cpp)
 add_executable(recognize_node src/recognize_node.cpp)
 add_executable(sound_node src/sound_node.cpp)
 
@@ -166,6 +167,7 @@ target_link_libraries(stm32_node ${catkin_LIBRARIES})
 #add_dependencies(stm32_node eac_pkg_generate_messages_cpp)
 target_link_libraries(test_vel_ctl ${catkin_LIBRARIES})
 target_link_libraries(recognize_node ${catkin_LIBRARIES})
+target_link_libraries(main_node ${catkin_LIBRARIES})
 target_link_libraries(sound_node
     ${catkin_LIBRARIES}
     asound
