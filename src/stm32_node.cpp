@@ -17,9 +17,9 @@
 
 ros::Publisher rw_pub;
 ros::Publisher lw_pub;
-ros::Publisher sound_pub;
+ros::Publisher cover_pub;
 geometry_msgs::Twist global_twist;
-std_msgs::UInt8 global_rail;
+std_msgs::UInt8 global_cover;
 int32_t total_right = 0;
 int32_t total_left = 0;
 
@@ -156,18 +156,19 @@ void updateMotorAction(const geometry_msgs::Twist& msg) {
   global_twist = msg;
 }
 
-void updateRailLocation(const std_msgs::UInt8& msg) {
-  global_rail = msg;
+void updateCoverAction(const std_msgs::UInt8& msg) {
+  global_cover = msg;
 }
 
 void sendAllArgs(const SerialDevice& sd) {
   const int x = std::min(static_cast<int>(global_twist.linear.x/MAX_LINEAR_SPEED*100), 100);
   const int r = std::min(static_cast<int>(global_twist.angular.z/MAX_ANG_SPEED*100), 100);
-  rapidjson::Document vel_obj;
-  vel_obj.SetObject();
-  vel_obj.AddMember("X", x, vel_obj.GetAllocator());
-  vel_obj.AddMember("R", r, vel_obj.GetAllocator());
-  const ssize_t write_count = sd.send(vel_obj);
+  rapidjson::Document cmd_obj;
+  cmd_obj.SetObject();
+  cmd_obj.AddMember("X", x, cmd_obj.GetAllocator());
+  cmd_obj.AddMember("R", r, cmd_obj.GetAllocator());
+  cmd_obj.AddMember("cover_cmd", global_cover.data, cmd_obj.GetAllocator());
+  const ssize_t write_count = sd.send(cmd_obj);
   if(write_count < 0)
     return;
   rapidjson::Document stm32_data = std::move(sd.tread(200));
@@ -185,30 +186,28 @@ void sendAllArgs(const SerialDevice& sd) {
   L.data = total_left;
   rw_pub.publish(R);
   lw_pub.publish(L);
-  if(!stm32_data.HasMember("SC")) {
-    ROS_WARN("Decode error: SC cmd not exist");
+  if(!stm32_data.HasMember("cover_state")) {
+    ROS_WARN("Decode error: cover_cmd not exist");
     return;
   }
-  if(!stm32_data["SC"].IsUint()) {
-    ROS_WARN("Decode error: SC cmd type error");
+  if(!stm32_data["SC"].IsBool()) {
+    ROS_WARN("Decode error: cover_cmd type error");
     return;
   }
-  std_msgs::UInt8 sound_cmd;
-  sound_cmd.data = stm32_data["SC"].GetUint();
-  sound_pub.publish(sound_cmd);
+  std_msgs::UInt8 cover_cmd;
+  cover_cmd.data = stm32_data["cover_cmd"].GetBool();
+  cover_pub.publish(cover_cmd);
 }
 
 int main(int argc, char* argv[]) {
-
   // ROS init
   ros::init(argc, argv, "stm32_node");
   ros::NodeHandle node_handle;
 
   rw_pub = node_handle.advertise<std_msgs::Int32>("/rwheel_ticks", 2);
   lw_pub = node_handle.advertise<std_msgs::Int32>("/lwheel_ticks", 2);
-  sound_pub = node_handle.advertise<std_msgs::UInt8>("/sound_cmd", 2);
   ros::Subscriber vel_sub = node_handle.subscribe("/cmd_vel", 2, updateMotorAction);
-  ros::Subscriber rail_sub = node_handle.subscribe("/rail_cmd", 2, updateRailLocation);
+  ros::Subscriber cover_sub = node_handle.subscribe("/cover_cmd", 2, updateCoverAction);
   ros::Rate rate(20);
   ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Info);
   // ReSharper disable once CppTooWideScope
