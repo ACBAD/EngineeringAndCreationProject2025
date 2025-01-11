@@ -18,7 +18,7 @@ public:
   geometry_msgs::Pose start_pose;
   geometry_msgs::Pose pick_pose;
   geometry_msgs::Pose security_zone;
-  UserSetPose();
+  UserSetPose(){}
   void init_red() {
     start_pose.position.x = 1.0;
     start_pose.position.y = 2.0;
