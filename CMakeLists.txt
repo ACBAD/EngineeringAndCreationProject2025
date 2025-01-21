@@ -18,6 +18,7 @@ find_package(catkin REQUIRED COMPONENTS
     sensor_msgs
     std_msgs
     message_generation
+    message_runtime
     cv_bridge
 )
 ## System dependencies are found with CMake's conventions
@@ -54,10 +55,10 @@ find_package(catkin REQUIRED COMPONENTS
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 ## Generate messages in the 'msg' folder
-#add_message_files(
-#    FILES
-#    motor_data.msg
-#)
+add_message_files(
+    FILES
+    VrResult.msg
+)
 
 ## Generate services in the 'srv' folder
 # add_service_files(
@@ -74,10 +75,10 @@ find_package(catkin REQUIRED COMPONENTS
 # )
 
 ## Generate added messages and services with any dependencies listed here
-#generate_messages(
-#    DEPENDENCIES
-#    std_msgs
-#)
+generate_messages(
+    DEPENDENCIES
+    std_msgs
+)
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -111,7 +112,17 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES EngineeringAndCreationProject
-    CATKIN_DEPENDS actionlib move_base_msgs nav_msgs roscpp rospy sensor_msgs std_msgs message_runtime cv_bridge
+    CATKIN_DEPENDS
+    actionlib
+    move_base_msgs
+    nav_msgs
+    roscpp
+    rospy
+    sensor_msgs
+    std_msgs
+    message_generation
+    message_runtime
+    cv_bridge
 #  DEPENDS system_lib
 )
 
@@ -145,10 +156,9 @@ include_directories(
 ## The recommended prefix ensures that target names across packages don't collide
 add_executable(stm32_node src/stm32_node.cpp)
 add_executable(test_vel_ctl src/test_vel_ctl.cpp)
-add_executable(rapidjson_test src/rapidjson_test.cpp)
 add_executable(main_node src/main_node.cpp)
-add_executable(recognize_node src/recognize_node.cpp)
 add_executable(sound_node src/sound_node.cpp)
+add_executable(visual_node src/visual_node.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -162,11 +172,10 @@ add_executable(sound_node src/sound_node.cpp)
 
 ## Specify libraries to link a library or executable target against
 target_include_directories(stm32_node PRIVATE include)
-target_include_directories(rapidjson_test PRIVATE include)
 target_link_libraries(stm32_node ${catkin_LIBRARIES})
-#add_dependencies(stm32_node eac_pkg_generate_messages_cpp)
+target_link_libraries(visual_node ${catkin_LIBRARIES})
+add_dependencies(visual_node eac_pkg_generate_messages_cpp)
 target_link_libraries(test_vel_ctl ${catkin_LIBRARIES})
-target_link_libraries(recognize_node ${catkin_LIBRARIES})
 target_link_libraries(main_node ${catkin_LIBRARIES})
 target_link_libraries(sound_node
     ${catkin_LIBRARIES}

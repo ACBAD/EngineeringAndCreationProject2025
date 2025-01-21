@@ -1,0 +1,5 @@
+std_msgs/Header header
+std_msgs/UInt8 count
+std_msgs/UInt16MultiArray locations
+std_msgs/UInt8MultiArray colors
+std_msgs/UInt8MultiArray shapes
