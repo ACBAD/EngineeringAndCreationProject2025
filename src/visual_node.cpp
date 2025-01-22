@@ -13,7 +13,7 @@
 
 ros::Publisher objects_pub;
 
-void VisualCallback(const eac_pkg::VrResultConstPtr& msg) {
+void visualCallback(const eac_pkg::VrResultConstPtr& msg) {
   const uint8_t now_count = msg->count.data;
   // check data validation
   constexpr char invalid_msg[] = "visual data invalid!!! (%s) drop it";
@@ -75,8 +75,8 @@ int main(int argc, char* argv[]) {
   ros::init(argc, argv, "visual_node");
   ros::NodeHandle node_handle;
   ROS_INFO("visual_node inited");
-  objects_pub = node_handle.advertise<eac_pkg::ObjectInfoArray>("objects_data", 2);
-  ros::Subscriber visual_sub = node_handle.subscribe("visual_data", 2, VisualCallback);
+  objects_pub = node_handle.advertise<eac_pkg::ObjectInfoArray>("/objects_data", 2);
+  ros::Subscriber visual_sub = node_handle.subscribe("/visual_data", 2, visualCallback);
   ros::spin();
 }
 

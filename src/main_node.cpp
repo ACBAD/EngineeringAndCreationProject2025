@@ -6,6 +6,7 @@
 #include <move_base_msgs/MoveBaseAction.h>
 #include <actionlib/client/simple_action_client.h>
 #include <std_msgs/UInt8.h>
+#include <eac_pkg/ObjectInfoArray.h>
 #include <iostream>
 
 enum SideColor {
@@ -13,13 +14,31 @@ enum SideColor {
   SIDE_BLUE
 };
 
+enum ObjectColor {
+  OBJ_RED,
+  OBJ_BLUE,
+  OBJ_YELLOW,
+  OBJ_BLACK
+};
+
+struct ObjectsStatus {
+  double distance;
+  double angle;
+  uint8_t color;
+  uint8_t shape;
+};
+
+std::vector<ObjectsStatus> objects_status;
+
 class UserSetPose {
 public:
   geometry_msgs::Pose start_pose;
   geometry_msgs::Pose pick_pose;
   geometry_msgs::Pose security_zone;
+  uint8_t chosen_color = -1;
   UserSetPose(){}
   void init_red() {
+    chosen_color = SIDE_RED;
     start_pose.position.x = 1.0;
     start_pose.position.y = 2.0;
     start_pose.position.z = 0.5;
@@ -36,6 +55,7 @@ public:
     security_zone.orientation.w = 1.0;
   }
   void init_blue() {
+    chosen_color = SIDE_BLUE;
     start_pose.position.x = 1.0;
     start_pose.position.y = 2.0;
     start_pose.position.z = 0.5;
@@ -57,13 +77,35 @@ typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseCl
 int start_pose_signal = 0;
 bool cover_state = true;
 
+void objectCallback(const eac_pkg::ObjectInfoArray& msg) {
+  const uint8_t count = msg.data.size();
+  objects_status.resize(count);
+  for (uint8_t obj_index = 0;obj_index < count;obj_index ++) {
+    objects_status[obj_index].distance = msg.data[obj_index].distance.data;
+    objects_status[obj_index].angle = msg.data[obj_index].angle.data;
+    objects_status[obj_index].color = msg.data[obj_index].color.data;
+    objects_status[obj_index].shape = msg.data[obj_index].shape.data;
+  }
+  ROS_DEBUG("objectCallback OK");
+}
+
 void updateCoverState(const std_msgs::UInt8& msg) {
   if(msg.data)cover_state = true;
   else cover_state = false;
 }
 
-int checkBallsIsAviliale() {
-  // TODO checkLogic
+ros::Subscriber object_sub;
+int checkObjectssIsAviliale(ObjectColor aginst_color) {
+  if(objects_status.size() == 0) {
+    ROS_WARN("visual recongnize failed!!!");
+    return 1;
+  }
+  for(auto itr = objects_status.begin();itr != objects_status.end();++itr) {
+    if(itr->color == aginst_color) {
+      ROS_WARN("detected aginst color!!!");
+      return 2;
+    }
+  }
   return 0;
 }
 
@@ -96,6 +138,7 @@ int main(int argc, char* argv[]) {
   ros::Publisher initialpose_pub = node_handle.advertise<geometry_msgs::PoseWithCovarianceStamped>("/initialpose", 2);
   ros::Publisher twist_pub = node_handle.advertise<geometry_msgs::Twist>("/cmd_vel", 2);
   ros::Publisher cover_pub = node_handle.advertise<std_msgs::UInt8>("/cover_cmd", 2);
+  object_sub = node_handle.subscribe("/objects_data", 2, objectCallback);
   if(start_pose_signal == 0) {
     ROS_ERROR("error input");
     return 1;
@@ -104,10 +147,12 @@ int main(int argc, char* argv[]) {
   if(start_pose_signal > 0) {
     ROS_INFO("choose red pose");
     poses.init_red();
+    poses.chosen_color = SIDE_RED;
   }
   else if(start_pose_signal < 0) {
     ROS_INFO("choose blue pose");
     poses.init_blue();
+    poses.chosen_color = SIDE_BLUE;
   }
   geometry_msgs::PoseWithCovarianceStamped init_start_pose;
   init_start_pose.header.frame_id = "map";
@@ -178,7 +223,7 @@ int main(int argc, char* argv[]) {
   }
   ROS_INFO("reach security zone, check balls state");
   // 在安全区前检查球是否正常，不正常就转方案2
-  if(checkBallsIsAviliale()) {
+  if(!checkObjectssIsAviliale(poses.chosen_color == SIDE_RED ? OBJ_RED : OBJ_BLUE)) {
     ROS_WARN("schema 1 FAILED! try schema 2");
     schema2();
     return 0;
