@@ -56,18 +56,17 @@ find_package(catkin REQUIRED COMPONENTS
 
 ## Generate messages in the 'msg' folder
 add_message_files(
-    FILES
-    VrResult.msg
-    ObjectInfo.msg
-    ObjectInfoArray.msg
+  FILES
+  VrResult.msg
+  ObjectInfo.msg
+  ObjectInfoArray.msg
 )
 
 ## Generate services in the 'srv' folder
-# add_service_files(
-#   FILES
-#   Service1.srv
-#   Service2.srv
-# )
+add_service_files(
+  FILES
+  EacGoal.srv
+)
 
 ## Generate actions in the 'action' folder
 # add_action_files(
@@ -78,8 +77,9 @@ add_message_files(
 
 ## Generate added messages and services with any dependencies listed here
 generate_messages(
-    DEPENDENCIES
-    std_msgs
+  DEPENDENCIES
+  std_msgs
+  move_base_msgs
 )
 
 ################################################
@@ -140,6 +140,7 @@ include_directories(
 # include
     ${catkin_INCLUDE_DIRS}
     ${catkin_PATH}/devel/include
+    ${CMAKE_SOURCE_DIR}/include
 )
 #set(CMAKE_PREFIX_PATH /home/xd/catkin_ws/devel)
 
@@ -162,6 +163,7 @@ add_executable(main_node src/main_node.cpp)
 add_executable(sound_node src/sound_node.cpp)
 add_executable(visual_node src/visual_node.cpp)
 add_executable(schema2_node src/schema2_node.cpp)
+add_executable(navigation_node src/navigation_node.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -180,8 +182,12 @@ target_link_libraries(visual_node ${catkin_LIBRARIES})
 add_dependencies(visual_node eac_pkg_generate_messages_cpp)
 target_link_libraries(test_vel_ctl ${catkin_LIBRARIES})
 target_link_libraries(main_node ${catkin_LIBRARIES})
+target_include_directories(main_node PRIVATE include)
 target_link_libraries(schema2_node ${catkin_LIBRARIES})
+target_include_directories(schema2_node PRIVATE include)
 add_dependencies(schema2_node eac_pkg_generate_messages_cpp)
+target_link_libraries(navigation_node ${catkin_LIBRARIES})
+target_include_directories(navigation_node PRIVATE include)
 target_link_libraries(sound_node
     ${catkin_LIBRARIES}
     asound

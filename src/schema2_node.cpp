@@ -3,31 +3,17 @@
 #include <eac_pkg/ObjectInfoArray.h>
 #include <eac_pkg/ObjectInfo.h>
 #include <geometry_msgs/Twist.h>
+#include <defines.h>
 
 // TODO 测量距离容忍极限
 #define DISTANCE_TOLERANCE_LIMIT 1.0
 // TODO 测量极限转换系数
 #define ANGLE_TOLERANCE_LIMIT 1.0
 
-constexpr double pi = 3.1415926535897932384626;
 uint8_t trigger = 0;
 
-enum ObjectColor {
-  OBJ_RED,
-  OBJ_BLUE,
-  OBJ_YELLOW,
-  OBJ_BLACK
-};
-
-struct ObjectsStatus {
-  double distance;
-  double angle;
-  uint8_t color;
-  uint8_t shape;
-};
-
 bool visual_state = false;
-std::vector<ObjectsStatus> objects_status;
+std::vector<ObjectState> objects_status;
 
 void objectCallback(const eac_pkg::ObjectInfoArray& msg) {
   const uint8_t count = msg.data.size();
@@ -98,9 +84,9 @@ int main(int argc, char* argv[]) {
     ROS_INFO("check aviliable");
     waitForVisualResult();
     const bool has_red = std::any_of(objects_status.begin(), objects_status.end(),
-                                     [](const ObjectsStatus& n){return n.color == OBJ_RED;});
+                                     [](const ObjectState& n){return n.color == OBJ_RED;});
     const bool has_blue = std::any_of(objects_status.begin(), objects_status.end(),
-                                      [](const ObjectsStatus& n){return n.color == OBJ_BLUE;});
+                                      [](const ObjectState& n){return n.color == OBJ_BLUE;});
     std_msgs::UInt8 obj_check_state;
     obj_check_state.data = 2;
     if(has_red)obj_check_state.data = OBJ_RED;
@@ -140,11 +126,11 @@ int main(int argc, char* argv[]) {
     case 2: {
       ROS_INFO(title_msg, "object detected, finding nearest...");
       auto nearest_object = std::min_element(objects_status.begin(), objects_status.end(),
-        [](const ObjectsStatus& a, const ObjectsStatus& b){return a.distance < b.distance;});
+        [](const ObjectState& a, const ObjectState& b){return a.distance < b.distance;});
       if(abs(nearest_object->angle) > ANGLE_TOLERANCE_LIMIT)sendRotateTwist(-nearest_object->angle);
       waitForVisualResult();
       nearest_object = std::min_element(objects_status.begin(), objects_status.end(),
-        [](const ObjectsStatus& a, const ObjectsStatus& b){return a.distance < b.distance;});
+        [](const ObjectState& a, const ObjectState& b){return a.distance < b.distance;});
       if(nearest_object == objects_status.end()) {
         ROS_WARN(title_msg, "object lost!!! return to case 1");
         sys_state = 1;
@@ -159,7 +145,7 @@ int main(int argc, char* argv[]) {
     case 3: {
       ROS_INFO(title_msg, "aligning OK, try to reach object");
       auto nearest_object = std::min_element(objects_status.begin(), objects_status.end(),
-        [](const ObjectsStatus& a, const ObjectsStatus& b){return a.distance < b.distance;});
+        [](const ObjectState& a, const ObjectState& b){return a.distance < b.distance;});
       if(nearest_object->distance < DISTANCE_TOLERANCE_LIMIT) {
         sys_state++;break;
       }

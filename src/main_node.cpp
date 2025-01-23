@@ -1,62 +1,12 @@
 #include <ros/ros.h>
-#include <ros/duration.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <geometry_msgs/Twist.h>
-#include <geometry_msgs/Pose.h>
 #include <move_base_msgs/MoveBaseAction.h>
 #include <actionlib/client/simple_action_client.h>
 #include <std_msgs/UInt8.h>
 #include <iostream>
-
-constexpr double pi = 3.1415926535897932384626;
-
-enum SideColor {
-  SIDE_RED,
-  SIDE_BLUE
-};
-
-class UserSetPose {
-public:
-  geometry_msgs::Pose start_pose;
-  geometry_msgs::Pose pick_pose;
-  geometry_msgs::Pose security_zone;
-  uint8_t chosen_color = -1;
-  UserSetPose(){}
-  void init_red() {
-    chosen_color = SIDE_RED;
-    start_pose.position.x = 1.0;
-    start_pose.position.y = 2.0;
-    start_pose.position.z = 0.5;
-    start_pose.orientation.w = 1.0;
-
-    pick_pose.position.x = 3.0;
-    pick_pose.position.y = 1.5;
-    pick_pose.position.z = 0.0;
-    pick_pose.orientation.w = 1.0;
-
-    security_zone.position.x = 0.0;
-    security_zone.position.y = 0.0;
-    security_zone.position.z = 0.0;
-    security_zone.orientation.w = 1.0;
-  }
-  void init_blue() {
-    chosen_color = SIDE_BLUE;
-    start_pose.position.x = 1.0;
-    start_pose.position.y = 2.0;
-    start_pose.position.z = 0.5;
-    start_pose.orientation.w = 1.0;
-
-    pick_pose.position.x = 3.0;
-    pick_pose.position.y = 1.5;
-    pick_pose.position.z = 0.0;
-    pick_pose.orientation.w = 1.0;
-
-    security_zone.position.x = 0.0;
-    security_zone.position.y = 0.0;
-    security_zone.position.z = 0.0;
-    security_zone.orientation.w = 1.0;
-  }
-};
+#include <defines.h>
+#include <eac_pkg/EacGoal.h>
 
 typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
 int start_pose_signal = 0;
@@ -81,17 +31,21 @@ int schema2(const ros::Publisher& schema2_pub) {
   return 0;
 }
 
-MoveBaseClient ac("move_base", true);
-
-actionlib::SimpleClientGoalState gotoGoal(const geometry_msgs::Pose& pose_goal) {
-  move_base_msgs::MoveBaseGoal goal;
-  goal.target_pose.header.frame_id = "map";
-  goal.target_pose.header.stamp = ros::Time::now();
-  goal.target_pose.pose = pose_goal;
-  ac.sendGoal(goal);
-  ROS_INFO("ac goal sent");
-  ac.waitForResult();
-  return ac.getState();
+int gotoGoal(ros::ServiceClient navi_client,
+            const PoseNames pose_name,
+            const uint8_t timeout = 0,
+            const geometry_msgs::Pose& pose = {}) {
+  const geometry_msgs::Pose empty_pose;
+  if(pose_name == COSTUM && pose == empty_pose) {
+    ROS_ERROR("need costum pose data");
+    return 1;
+  }
+  eac_pkg::EacGoal goal_msg;
+  goal_msg.request.goal_index = pose_name;
+  goal_msg.request.timeout = timeout;
+  navi_client.call(goal_msg);
+  if(goal_msg.response.state == false)return 3;
+  return 0;
 }
 
 int main(int argc, char* argv[]) {
@@ -102,10 +56,10 @@ int main(int argc, char* argv[]) {
   // 输入选择的位置，红方或者是蓝方
   std::cout<<"input postion, positive for red, negetive for blue\ninput: ";
   std::cin>>start_pose_signal;
-  ros::Publisher initialpose_pub = node_handle.advertise<geometry_msgs::PoseWithCovarianceStamped>("/initialpose", 2);
-  ros::Publisher twist_pub = node_handle.advertise<geometry_msgs::Twist>("/cmd_vel", 2);
-  ros::Publisher cover_pub = node_handle.advertise<std_msgs::UInt8>("/cover_cmd", 2);
-  ros::Publisher schema2_pub = node_handle.advertise<std_msgs::UInt8>("/schema2_node", 2);
+  ros::param::set("side_color", start_pose_signal);
+  const ros::Publisher cover_pub = node_handle.advertise<std_msgs::UInt8>("/cover_cmd", 2);
+  const ros::Publisher schema2_pub = node_handle.advertise<std_msgs::UInt8>("/schema2_node", 2);
+  ros::ServiceClient navi_client = node_handle.serviceClient<eac_pkg::EacGoal>("navigation");
   if(start_pose_signal == 0) {
     ROS_ERROR("error input");
     return 1;
@@ -121,26 +75,9 @@ int main(int argc, char* argv[]) {
     poses.init_blue();
     poses.chosen_color = SIDE_BLUE;
   }
-  geometry_msgs::PoseWithCovarianceStamped init_start_pose;
-  init_start_pose.header.frame_id = "map";
-  init_start_pose.header.stamp = ros::Time::now();
-  init_start_pose.pose.covariance = {};
-  init_start_pose.pose.pose = poses.start_pose;
-  // 设定初始位置
-  initialpose_pub.publish(init_start_pose);
-  ROS_INFO("initialpose sent, rolling for amcl");
-  geometry_msgs::Twist init_rolling_twist{};
-  // 高速旋转初始化amcl
-  init_rolling_twist.angular.z = 99999999;
-  twist_pub.publish(init_rolling_twist);
-  // ReSharper disable once CppExpressionWithoutSideEffects
-  ros::Duration(5.0).sleep();
-  while(!ac.waitForServer(ros::Duration(5.0))){
-    ROS_INFO("Waiting for the move_base action server to come up");
-  }
-  ROS_INFO("action server online");
+
   // 前往设定起点（应该动作幅度不大）
-  if(gotoGoal(poses.start_pose) != actionlib::SimpleClientGoalState::SUCCEEDED) {
+  if(gotoGoal(navi_client, START_POSE) != 0) {
     ROS_ERROR("init failed, rerun");
     return 1;
   }
@@ -157,7 +94,7 @@ int main(int argc, char* argv[]) {
   ROS_INFO("rolling cover!");
 
   // 同时前往球区前方，如果没过去就判定为失败进入方案2
-  if(gotoGoal(poses.pick_pose) != actionlib::SimpleClientGoalState::SUCCEEDED) {
+  if(gotoGoal(navi_client, PICK_POSE) != 0) {
     ROS_WARN("schema 1 FAILED! try schema 2");
     schema2(schema2_pub);
     return 0;
@@ -183,7 +120,7 @@ int main(int argc, char* argv[]) {
   }
   ROS_INFO("cover done! go to security zone");
   // 前往安全区，失败就转方案2
-  if(gotoGoal(poses.security_zone) != actionlib::SimpleClientGoalState::SUCCEEDED) {
+  if(gotoGoal(navi_client, SECURITY_ZONE) != 0) {
     ROS_WARN("schema 1 FAILED! try schema 2");
     schema2(schema2_pub);
     return 0;

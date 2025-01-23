@@ -1,0 +1,6 @@
+uint8 timeout
+uint8 goal_index
+geometry_msgs/Pose custom_goal
+---
+bool state
+uint8 extra_msg

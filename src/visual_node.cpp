@@ -71,6 +71,7 @@ void visualCallback(const eac_pkg::VrResultConstPtr& msg) {
   objects_pub.publish(objects);
 }
 
+
 int main(int argc, char* argv[]) {
   ros::init(argc, argv, "visual_node");
   ros::NodeHandle node_handle;
