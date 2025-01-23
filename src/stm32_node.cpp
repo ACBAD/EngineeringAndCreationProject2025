@@ -195,7 +195,7 @@ void sendAllArgs(const SerialDevice& sd) {
     return;
   }
   std_msgs::UInt8 cover_cmd;
-  cover_cmd.data = stm32_data["cover_cmd"].GetBool();
+  cover_cmd.data = stm32_data["cover_state"].GetBool();
   cover_pub.publish(cover_cmd);
 }
 
@@ -206,6 +206,7 @@ int main(int argc, char* argv[]) {
 
   rw_pub = node_handle.advertise<std_msgs::Int32>("/rwheel_ticks", 2);
   lw_pub = node_handle.advertise<std_msgs::Int32>("/lwheel_ticks", 2);
+  cover_pub = node_handle.advertise<std_msgs::UInt8>("/cover_state", 2);
   ros::Subscriber vel_sub = node_handle.subscribe("/cmd_vel", 2, updateMotorAction);
   ros::Subscriber cover_sub = node_handle.subscribe("/cover_cmd", 2, updateCoverAction);
   ros::Rate rate(20);

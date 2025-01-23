@@ -61,13 +61,13 @@ void visualCallback(const eac_pkg::VrResultConstPtr& msg) {
     const double center_x = (ltx_location + rbx_location) / 2;
     const double angle = ANGLE_SCALE * center_x - IMAGE_WIDTH / 2;
 
-    objects.data[object_index].angle.data = angle;
-    objects.data[object_index].distance.data = distance;
-    objects.data[object_index].color.data = color;
-    objects.data[object_index].shape.data = shape;
+    objects.data[object_index].angle = angle;
+    objects.data[object_index].distance = distance;
+    objects.data[object_index].color = color;
+    objects.data[object_index].shape = shape;
     ROS_DEBUG("convert done");
   }
-
+  objects.stamp = ros::Time::now();
   objects_pub.publish(objects);
 }
 

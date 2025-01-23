@@ -1,4 +1,4 @@
-std_msgs/Float32 distance
-std_msgs/Float32 angle
-std_msgs/UInt8 color
-std_msgs/UInt8 shape
+float64 distance
+float64 angle
+uint8 color
+uint8 shape

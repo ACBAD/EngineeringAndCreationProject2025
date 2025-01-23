@@ -7,6 +7,11 @@
 #include <geometry_msgs/Pose.h>
 constexpr double pi = 3.1415926535897932384626;
 
+// TODO 测量距离容忍极限
+#define DISTANCE_TOLERANCE_LIMIT 1.0
+// TODO 测量极限转换系数
+#define ANGLE_TOLERANCE_LIMIT 1.0
+
 enum SideColor {
   SIDE_RED,
   SIDE_BLUE
@@ -67,11 +72,9 @@ enum ObjectColor {
   OBJ_BLACK
 };
 
-struct ObjectState {
-  double distance;
-  double angle;
-  uint8_t color;
-  uint8_t shape;
-};
+inline bool checkInfoAviliable(const ros::Time infoTime, const ros::Duration delta = ros::Duration(0.01)) {
+  if(ros::Time::now() - infoTime > delta)return false;
+  return true;
+}
 
 #endif //DEFINES_H

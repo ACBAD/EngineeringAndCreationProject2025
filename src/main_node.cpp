@@ -7,21 +7,18 @@
 #include <iostream>
 #include <defines.h>
 #include <eac_pkg/EacGoal.h>
+#include <eac_pkg/ObjectInfoArray.h>
 
 typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
-int start_pose_signal = 0;
+int side_color = 0;
 bool cover_state = true;
+eac_pkg::ObjectInfoArray object_infos;
+
+void updateObjectsInfos(const eac_pkg::ObjectInfoArray& msg) {object_infos = msg;}
 
 void updateCoverState(const std_msgs::UInt8& msg) {
   if(msg.data)cover_state = true;
   else cover_state = false;
-}
-
-bool obj_detected = false;
-uint8_t obj_state;
-void objAviliableCallback(const std_msgs::UInt8& msg) {
-  obj_detected = true;
-  obj_state = msg.data;
 }
 
 int schema2(const ros::Publisher& schema2_pub) {
@@ -31,7 +28,7 @@ int schema2(const ros::Publisher& schema2_pub) {
   return 0;
 }
 
-int gotoGoal(ros::ServiceClient navi_client,
+int gotoGoal(ros::ServiceClient& navi_client,
             const PoseNames pose_name,
             const uint8_t timeout = 0,
             const geometry_msgs::Pose& pose = {}) {
@@ -54,27 +51,15 @@ int main(int argc, char* argv[]) {
   // 此处开始为抽签完成后的调试阶段
   ROS_INFO("main start");
   // 输入选择的位置，红方或者是蓝方
-  std::cout<<"input postion, positive for red, negetive for blue\ninput: ";
-  std::cin>>start_pose_signal;
-  ros::param::set("side_color", start_pose_signal);
-  const ros::Publisher cover_pub = node_handle.advertise<std_msgs::UInt8>("/cover_cmd", 2);
-  const ros::Publisher schema2_pub = node_handle.advertise<std_msgs::UInt8>("/schema2_node", 2);
-  ros::ServiceClient navi_client = node_handle.serviceClient<eac_pkg::EacGoal>("navigation");
-  if(start_pose_signal == 0) {
-    ROS_ERROR("error input");
+  if(!ros::param::get("side_color", side_color)) {
+    ROS_ERROR("side_color not define, do you forget start navigation node?");
     return 1;
   }
-  UserSetPose poses;
-  if(start_pose_signal > 0) {
-    ROS_INFO("choose red pose");
-    poses.init_red();
-    poses.chosen_color = SIDE_RED;
-  }
-  else if(start_pose_signal < 0) {
-    ROS_INFO("choose blue pose");
-    poses.init_blue();
-    poses.chosen_color = SIDE_BLUE;
-  }
+
+  const ros::Publisher cover_pub = node_handle.advertise<std_msgs::UInt8>("/cover_cmd", 2);
+  const ros::Publisher schema2_pub = node_handle.advertise<std_msgs::UInt8>("/schema2_node", 2);
+  ros::Subscriber object_info_sub = node_handle.subscribe("/objects_data", 2, updateObjectsInfos);
+  ros::ServiceClient navi_client = node_handle.serviceClient<eac_pkg::EacGoal>("navigation");
 
   // 前往设定起点（应该动作幅度不大）
   if(gotoGoal(navi_client, START_POSE) != 0) {
@@ -101,13 +86,11 @@ int main(int argc, char* argv[]) {
   }
   ROS_INFO("reach target location, waiting cover ready");
   cover_state = false;
-  ros::Subscriber cover_sub = node_handle.subscribe("/cover_cmd", 2, updateCoverState);
+  ros::Subscriber cover_sub = node_handle.subscribe("/cover_state", 2, updateCoverState);
   // 等待罩子就位
   // spinOnce can call updateCoverState
   // ReSharper disable once CppDFALoopConditionNotUpdated
-  while (!cover_state) {
-    ros::spinOnce();
-  }
+  while (!cover_state) {ros::spinOnce();}
   ROS_INFO("cover ready, covering!");
   cover_state = false;
   cover_angle.data = 180;
@@ -115,9 +98,7 @@ int main(int argc, char* argv[]) {
   cover_pub.publish(cover_angle);
   // spinOnce can call updateCoverState
   // ReSharper disable once CppDFALoopConditionNotUpdated
-  while (!cover_state) {
-    ros::spinOnce();
-  }
+  while (!cover_state) {ros::spinOnce();}
   ROS_INFO("cover done! go to security zone");
   // 前往安全区，失败就转方案2
   if(gotoGoal(navi_client, SECURITY_ZONE) != 0) {
@@ -126,29 +107,37 @@ int main(int argc, char* argv[]) {
     return 0;
   }
   ROS_INFO("reach security zone, check balls state");
+
   // 在安全区前检查球是否正常，不正常就转方案2
-  ros::Subscriber obj_aviliable_sub = node_handle.subscribe("/obj_aviliable", 2, objAviliableCallback);
-  std_msgs::UInt8 active_aviliable_check;
-  active_aviliable_check.data = 2;
-  schema2_pub.publish(active_aviliable_check);
-  // ReSharper disable once CppDFALoopConditionNotUpdated
-  while (!obj_detected) {
-    ros::spinOnce();
-  }
-  if(obj_state == 2 || obj_state == 3 || (static_cast<SideColor>(obj_state)) != poses.chosen_color) {
-    ROS_WARN("schema 1 FAILED! try schema 2");
+  while (!checkInfoAviliable(object_infos.stamp)){ros::spinOnce();}
+  const bool has_red = std::any_of(object_infos.data.begin(), object_infos.data.end(),
+                                     [](const eac_pkg::ObjectInfo& n) {
+                                       return n.color == OBJ_RED && n.distance < DISTANCE_TOLERANCE_LIMIT ;
+                                     });
+  const bool has_blue = std::any_of(object_infos.data.begin(), object_infos.data.end(),
+                                    [](const eac_pkg::ObjectInfo& n) {
+                                      return n.color == OBJ_BLUE && n.distance < DISTANCE_TOLERANCE_LIMIT;
+                                    });
+  if((side_color == SIDE_RED && has_blue) || (side_color == SIDE_BLUE && has_red)) {
+    ROS_ERROR("wrong object state, use schema 2");
+    cover_state = false;
+    cover_angle.data = 0;
+    // 抬起罩子
+    cover_pub.publish(cover_angle);
+    // spinOnce can call updateCoverState
+    // ReSharper disable once CppDFALoopConditionNotUpdated
+    while (!cover_state) {ros::spinOnce();}
     schema2(schema2_pub);
     return 0;
   }
+
   cover_state = false;
   cover_angle.data = 0;
   // 抬起罩子
   cover_pub.publish(cover_angle);
   // spinOnce can call updateCoverState
   // ReSharper disable once CppDFALoopConditionNotUpdated
-  while (!cover_state) {
-    ros::spinOnce();
-  }
+  while (!cover_state) {ros::spinOnce();}
   // 赢
   ROS_WARN("WIN");
   ros::spin();
