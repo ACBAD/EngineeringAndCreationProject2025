@@ -9,6 +9,13 @@
 #include <eac_pkg/ObjectInfoArray.h>
 #include <iostream>
 
+// TODO 测量距离容忍极限
+#define DISTANCE_TOLERANCE_LIMIT 1.0
+// TODO 测量极限转换系数
+#define ANGLE_TOLERANCE_LIMIT 1.0
+
+constexpr double pi = 3.1415926535897932384626;
+
 enum SideColor {
   SIDE_RED,
   SIDE_BLUE
@@ -28,6 +35,7 @@ struct ObjectsStatus {
   uint8_t shape;
 };
 
+bool visual_state = false;
 std::vector<ObjectsStatus> objects_status;
 
 class UserSetPose {
@@ -87,6 +95,7 @@ void objectCallback(const eac_pkg::ObjectInfoArray& msg) {
     objects_status[obj_index].shape = msg.data[obj_index].shape.data;
   }
   ROS_DEBUG("objectCallback OK");
+  visual_state = true;
 }
 
 void updateCoverState(const std_msgs::UInt8& msg) {
@@ -95,7 +104,7 @@ void updateCoverState(const std_msgs::UInt8& msg) {
 }
 
 ros::Subscriber object_sub;
-int checkObjectssIsAviliale(ObjectColor aginst_color) {
+int checkObjectssIsAviliale(const ObjectColor aginst_color) {
   if(objects_status.size() == 0) {
     ROS_WARN("visual recongnize failed!!!");
     return 1;
@@ -109,8 +118,96 @@ int checkObjectssIsAviliale(ObjectColor aginst_color) {
   return 0;
 }
 
-int schema2() {
-  // TODO schema2
+ros::Publisher twist_pub;
+int sendRotateTwist(const double angle = 30, const double palstance = 1) {
+  const double radian = angle * (pi / 180.0);
+  const double wait_sec = radian / palstance;
+  geometry_msgs::Twist rotate_cmd;
+  rotate_cmd.angular.z = palstance;
+  twist_pub.publish(rotate_cmd);
+  rotate_cmd.angular.z = 0;
+  // ReSharper disable once CppExpressionWithoutSideEffects
+  ros::Duration(wait_sec).sleep();
+  twist_pub.publish(rotate_cmd);
+  return 0;
+}
+
+geometry_msgs::Twist sendStraightTwist(const double distance_velocity, const double velocity = 0) {
+  geometry_msgs::Twist straight_cmd;
+  straight_cmd.linear.x = velocity == 0 ? distance_velocity : 0.5;
+  twist_pub.publish(straight_cmd);
+  straight_cmd.linear.x = 0;
+  if(velocity == 0)return straight_cmd;
+  const double wait_sec = distance_velocity / velocity;
+  // ReSharper disable once CppExpressionWithoutSideEffects
+  ros::Duration(wait_sec).sleep();
+  twist_pub.publish(straight_cmd);
+  return straight_cmd;
+}
+
+int waitForVisualResult() {
+  visual_state = false;
+  // ReSharper disable once CppDFALoopConditionNotUpdated
+  while (!visual_state) {
+    ros::spinOnce();
+  }
+  return 0;
+}
+
+ros::Timer navi_timer;
+int schema2(const ros::NodeHandle& node_handle) {
+  uint8_t sys_state = 1;
+  constexpr char title_msg[] = "schema2 acting: %s";
+  while (sys_state != 0) {
+    switch (sys_state) {
+    case 1: {
+      waitForVisualResult();
+      if(objects_status.size() > 0) {
+        sys_state++;
+        break;
+      }
+      ROS_INFO(title_msg, "rotating, checking objects...");
+      sendRotateTwist();
+      break;
+    }
+    case 2: {
+      ROS_INFO(title_msg, "object detected, finding nearest...");
+      auto nearest_object = std::min_element(objects_status.begin(), objects_status.end(),
+        [](const ObjectsStatus& a, const ObjectsStatus& b){return a.distance < b.distance;});
+      if(abs(nearest_object->angle) > ANGLE_TOLERANCE_LIMIT)sendRotateTwist(-nearest_object->angle);
+      waitForVisualResult();
+      nearest_object = std::min_element(objects_status.begin(), objects_status.end(),
+        [](const ObjectsStatus& a, const ObjectsStatus& b){return a.distance < b.distance;});
+      if(nearest_object == objects_status.end()) {
+        ROS_WARN(title_msg, "object lost!!! return to case 1");
+        sys_state = 1;
+        break;
+      }
+      if(abs(nearest_object->angle) < ANGLE_TOLERANCE_LIMIT) {
+        sys_state++;break;
+      }
+      ROS_WARN(title_msg, "aligning failed! return to case 2");
+      break;
+    }
+    case 3: {
+      ROS_INFO(title_msg, "aligning OK, try to reach object");
+      auto nearest_object = std::min_element(objects_status.begin(), objects_status.end(),
+        [](const ObjectsStatus& a, const ObjectsStatus& b){return a.distance < b.distance;});
+      if(nearest_object->distance < DISTANCE_TOLERANCE_LIMIT) {
+        sys_state++;break;
+      }
+      ROS_INFO(title_msg, "too far, reaching ...");
+      sendStraightTwist(0.5);
+
+      break;
+    }
+    default:{
+      ROS_WARN(title_msg, "invalid sys_state, return to 0");
+      sys_state = 0;
+      break;
+    }
+    }
+  }
   return 0;
 }
 
@@ -136,7 +233,7 @@ int main(int argc, char* argv[]) {
   std::cout<<"input postion, positive for red, negetive for blue\ninput: ";
   std::cin>>start_pose_signal;
   ros::Publisher initialpose_pub = node_handle.advertise<geometry_msgs::PoseWithCovarianceStamped>("/initialpose", 2);
-  ros::Publisher twist_pub = node_handle.advertise<geometry_msgs::Twist>("/cmd_vel", 2);
+  twist_pub = node_handle.advertise<geometry_msgs::Twist>("/cmd_vel", 2);
   ros::Publisher cover_pub = node_handle.advertise<std_msgs::UInt8>("/cover_cmd", 2);
   object_sub = node_handle.subscribe("/objects_data", 2, objectCallback);
   if(start_pose_signal == 0) {
@@ -192,7 +289,7 @@ int main(int argc, char* argv[]) {
   // 同时前往球区前方，如果没过去就判定为失败进入方案2
   if(gotoGoal(poses.pick_pose) != actionlib::SimpleClientGoalState::SUCCEEDED) {
     ROS_WARN("schema 1 FAILED! try schema 2");
-    schema2();
+    schema2(node_handle);
     return 0;
   }
   ROS_INFO("reach target location, waiting cover ready");
@@ -218,14 +315,14 @@ int main(int argc, char* argv[]) {
   // 前往安全区，失败就转方案2
   if(gotoGoal(poses.security_zone) != actionlib::SimpleClientGoalState::SUCCEEDED) {
     ROS_WARN("schema 1 FAILED! try schema 2");
-    schema2();
+    schema2(node_handle);
     return 0;
   }
   ROS_INFO("reach security zone, check balls state");
   // 在安全区前检查球是否正常，不正常就转方案2
   if(!checkObjectssIsAviliale(poses.chosen_color == SIDE_RED ? OBJ_RED : OBJ_BLUE)) {
     ROS_WARN("schema 1 FAILED! try schema 2");
-    schema2();
+    schema2(node_handle);
     return 0;
   }
   cover_state = false;

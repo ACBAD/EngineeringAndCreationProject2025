@@ -161,6 +161,7 @@ add_executable(test_vel_ctl src/test_vel_ctl.cpp)
 add_executable(main_node src/main_node.cpp)
 add_executable(sound_node src/sound_node.cpp)
 add_executable(visual_node src/visual_node.cpp)
+add_executable(schema2_node src/schema2_node.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -179,6 +180,8 @@ target_link_libraries(visual_node ${catkin_LIBRARIES})
 add_dependencies(visual_node eac_pkg_generate_messages_cpp)
 target_link_libraries(test_vel_ctl ${catkin_LIBRARIES})
 target_link_libraries(main_node ${catkin_LIBRARIES})
+target_link_libraries(schema2_node ${catkin_LIBRARIES})
+add_dependencies(schema2_node eac_pkg_generate_messages_cpp)
 target_link_libraries(sound_node
     ${catkin_LIBRARIES}
     asound
