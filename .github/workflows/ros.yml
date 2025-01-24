@@ -35,6 +35,7 @@ jobs:
 
       - name: Build ROS workspace
         run: |
+          mkdir -p ~/catkin_ws
           mkdir -p ~/catkin_ws/src
           ln -s $GITHUB_WORKSPACE ~/catkin_ws/src/your_ros_package  # 替换为你的 ROS 包名
           cd ~/catkin_ws
