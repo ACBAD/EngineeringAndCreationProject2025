@@ -1,0 +1,48 @@
+name: ROS CI
+
+on:
+  push:
+    branches:
+      - main  # 触发构建的分支
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04  # ROS Noetic 支持 Ubuntu 20.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up ROS
+        run: |
+          sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'
+          sudo apt-key adv --keyserver 'hkp://keyserver.ubuntu.com:80' --recv-key C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654
+          sudo apt-get update
+          sudo apt-get install -y ros-noetic-desktop-full
+          echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc
+          source ~/.bashrc
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get install -y python3-rosdep python3-rosinstall python3-rosinstall-generator python3-wstool build-essential
+          sudo rosdep init
+          rosdep update
+          rosdep install --from-paths src --ignore-src -y --rosdistro noetic
+
+      - name: Build ROS workspace
+        run: |
+          mkdir -p ~/catkin_ws/src
+          ln -s $GITHUB_WORKSPACE ~/catkin_ws/src/your_ros_package  # 替换为你的 ROS 包名
+          cd ~/catkin_ws
+          catkin_make
+
+      - name: Cache ROS dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.ros
+          key: ${{ runner.os }}-ros-${{ hashFiles('**/package.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-ros-
