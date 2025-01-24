@@ -25,6 +25,7 @@ jobs:
           sudo apt-get install -y python3-catkin-tools
           echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc
           source ~/.bashrc
+          source /opt/ros/noetic/setup.bash
 
       - name: Install dependencies
         run: |
@@ -34,6 +35,12 @@ jobs:
 
       - name: Build ROS workspace
         run: |
+          source /opt/ros/noetic/setup.bash
+          if test -f "/opt/ros/noetic/bin/catkin_make"; then
+            echo "File exists!"
+          else
+            echo "File does not exist!"
+          fi
           mkdir -p ~/catkin_ws
           mkdir -p ~/catkin_ws/src
           mkdir -p ~/catkin_ws/src/eac_pkg
