@@ -29,6 +29,14 @@ jobs:
           sudo apt-get install -y libasound2-dev
           rosdep update
 
+      - name: Cache apt packages
+        uses: actions/cache@v3
+        with:
+          path: /var/cache/apt/archives/
+          key: apt-${{ runner.os }}-${{ hashFiles('**/apt-packages.txt') }}
+          restore-keys: |
+            apt-${{ runner.os }}-
+
       - name: Build ROS workspace
         run: |
           source /opt/ros/noetic/setup.bash
