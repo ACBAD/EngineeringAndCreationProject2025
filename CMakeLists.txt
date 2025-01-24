@@ -182,12 +182,14 @@ target_link_libraries(visual_node ${catkin_LIBRARIES})
 add_dependencies(visual_node eac_pkg_generate_messages_cpp)
 target_link_libraries(test_vel_ctl ${catkin_LIBRARIES})
 target_link_libraries(main_node ${catkin_LIBRARIES})
+add_dependencies(main_node eac_pkg_generate_messages_cpp)
 target_include_directories(main_node PRIVATE include)
 target_link_libraries(schema2_node ${catkin_LIBRARIES})
 target_include_directories(schema2_node PRIVATE include)
 add_dependencies(schema2_node eac_pkg_generate_messages_cpp)
 target_link_libraries(navigation_node ${catkin_LIBRARIES})
 target_include_directories(navigation_node PRIVATE include)
+add_dependencies(navigation_node eac_pkg_generate_messages_cpp)
 target_link_libraries(sound_node
     ${catkin_LIBRARIES}
     asound

@@ -1,12 +1,8 @@
 name: ROS CI
 
 on:
-  push:
-    branches:
-      - master  # 触发构建的分支
-  pull_request:
-    branches:
-      - master
+  repository_dispatch:
+    types: [ manual-trigger ]  # 事件类型
 
 jobs:
   build:
@@ -31,6 +27,7 @@ jobs:
         run: |
           sudo apt install python3-rosdep python3-rosinstall python3-rosinstall-generator python3-wstool build-essential
           sudo rosdep init
+          sudo apt-get install -y libasound2-dev
           rosdep update
 
       - name: Build ROS workspace
