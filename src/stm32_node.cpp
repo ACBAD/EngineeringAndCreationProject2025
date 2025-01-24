@@ -7,13 +7,10 @@
 #include <csignal>
 #include <poll.h>
 #include <rapidjson/document.h>
-#include <rapidjson/prettywriter.h>
+#include <rapidjson/writer.h>
 #include <std_msgs/UInt8.h>
 #include <std_msgs/Int32.h>
-#define SERIAL_PORT "/dev/ttyS3"
-#define MAX_LINEAR_SPEED 1.2
-#define MAX_ANG_SPEED 1
-#define READ_STR_LENGTH 500
+#include <stm32_defines.h>
 
 ros::Publisher rw_pub;
 ros::Publisher lw_pub;
@@ -23,51 +20,55 @@ std_msgs::UInt8 global_cover;
 int32_t total_right = 0;
 int32_t total_left = 0;
 
-template <typename T>
-class JsonConversion;
-template <>
-class JsonConversion <uint64_t> {
-  uint64_t value = 0;
+class EasyDocument{
+  rapidjson::Document d;
 public:
-  JsonConversion() = default;
-  operator uint64_t() const {return value;}
-  bool convert(const rapidjson::Document& d, const char* name) {
-    if (!d.HasMember(name) || !d[name].IsInt64()) {
-      ROS_WARN("Decode error: decoding %s error, except int64", name);
-      return false;
-    }
-    value = d[name].GetInt64();
-    return true;
+  EasyDocument() = delete;
+  explicit EasyDocument(rapidjson::Document&& other): d(std::move(other)) {}
+  rapidjson::Document extractDocument(){
+    rapidjson::Document temp;
+    temp.Swap(d);
+    return temp;
   }
-};
-template <>
-class JsonConversion <double> {
-  double value = 0;
-public:
-  JsonConversion() = default;
-  operator double() const {return value;}
-  bool convert(const rapidjson::Document& d, const char* name) {
-    if (!d.HasMember(name) || !d[name].IsDouble()) {
-      ROS_WARN("Decode error: decoding %s error, except double", name);
-      return false;
+  template <typename T>
+  auto getElementEasier(const char* key) const {
+
+    if(d.IsNull())
+      throw std::runtime_error("has parse error, or this is a null value");
+    if(d.HasParseError())
+      throw std::runtime_error("has parse error");
+
+    const auto &dk = d[key];
+    if(!d.HasMember(key)){
+      char _[100];
+      std::sprintf(_, "%s not exist", key);
+      throw std::runtime_error(_);
     }
-    value = d[name].GetDouble();
-    return true;
-  }
-};
-template <>
-class JsonConversion <std::string> {
-  std::string value;
-public:
-  JsonConversion() = default;
-  operator std::string() {return value;}
-  bool convert(const rapidjson::Document& d, const char* name) {
-    if (!d.HasMember(name) || !d[name].IsString()) {
-      ROS_WARN("Decode error: decoding %s error, except string", name);
-      return false;
+
+    auto throwType = [key](const char* type) {
+      char _[100];
+      std::sprintf(_, "%s is not %s", key, type);
+      throw std::runtime_error(_);
+    };
+    if constexpr (std::is_same_v<std::decay_t<T>, bool>) {
+      if(!dk.IsBool())
+        throwType("bool");
+      return dk.GetBool();
     }
-    value = std::move(d[name].GetString());
-    return true;
+    if constexpr (std::is_same_v<std::decay_t<T>, std::string>) {
+      if(!dk.IsString())
+        throwType("string");
+      return dk.GetString();
+    }
+    if(!dk.IsNumber())
+      throwType("number");
+    if constexpr (std::is_same_v<std::decay_t<T>, double>)
+      return dk.GetDouble();
+    if constexpr (std::is_same_v<std::decay_t<T>, int64_t>) {
+      if(!dk.IsInt64())
+        throwType("int, but float");
+      return dk.GetInt64();
+    }
   }
 };
 
@@ -141,7 +142,7 @@ public:
       return -10;
     tcflush(serial_port, TCIOFLUSH);
     rapidjson::StringBuffer sb;
-    rapidjson::Writer<rapidjson::StringBuffer> writer(sb);
+    rapidjson::Writer writer(sb);
     d.Accept(writer);
     const ssize_t write_count = write(serial_port, sb.GetString(), sb.GetSize());
     if(write_count == sb.GetSize())
@@ -171,31 +172,20 @@ void sendAllArgs(const SerialDevice& sd) {
   const ssize_t write_count = sd.send(cmd_obj);
   if(write_count < 0)
     return;
-  rapidjson::Document stm32_data = std::move(sd.tread(200));
-  if(stm32_data.IsNull())
-    return;
-  JsonConversion<uint64_t> jc;
-  if(!jc.convert(stm32_data, "R"))
-    return;
-  total_right += static_cast<int64_t>(jc);
-  if(!jc.convert(stm32_data, "L"))
-    return;
-  total_left -= static_cast<int64_t>(jc);
+  EasyDocument stm32_data(std::move(sd.tread(200)));
+  std_msgs::UInt8 cover_cmd;
+  try {
+    total_right += stm32_data.getElementEasier<int64_t>("R");
+    total_left -= stm32_data.getElementEasier<int64_t>("L");
+    cover_cmd.data = stm32_data.getElementEasier<bool>("cover_state");
+  }catch (std::runtime_error& e) {
+    ROS_WARN("Error in parsing: %s", e.what());
+  }
   std_msgs::Int32 R,L;
   R.data = total_right;
   L.data = total_left;
   rw_pub.publish(R);
   lw_pub.publish(L);
-  if(!stm32_data.HasMember("cover_state")) {
-    ROS_WARN("Decode error: cover_cmd not exist");
-    return;
-  }
-  if(!stm32_data["SC"].IsBool()) {
-    ROS_WARN("Decode error: cover_cmd type error");
-    return;
-  }
-  std_msgs::UInt8 cover_cmd;
-  cover_cmd.data = stm32_data["cover_state"].GetBool();
   cover_pub.publish(cover_cmd);
 }
 

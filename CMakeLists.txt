@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.0.2)
 project(eac_pkg)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
-# add_compile_options(-std=c++11)
+add_compile_options(-std=c++17)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -158,7 +158,6 @@ include_directories(
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
 add_executable(stm32_node src/stm32_node.cpp)
-add_executable(test_vel_ctl src/test_vel_ctl.cpp)
 add_executable(main_node src/main_node.cpp)
 add_executable(sound_node src/sound_node.cpp)
 add_executable(visual_node src/visual_node.cpp)
@@ -180,7 +179,6 @@ target_include_directories(stm32_node PRIVATE include)
 target_link_libraries(stm32_node ${catkin_LIBRARIES})
 target_link_libraries(visual_node ${catkin_LIBRARIES})
 add_dependencies(visual_node eac_pkg_generate_messages_cpp)
-target_link_libraries(test_vel_ctl ${catkin_LIBRARIES})
 target_link_libraries(main_node ${catkin_LIBRARIES})
 add_dependencies(main_node eac_pkg_generate_messages_cpp)
 target_include_directories(main_node PRIVATE include)

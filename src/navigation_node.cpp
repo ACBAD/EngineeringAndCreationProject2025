@@ -36,7 +36,10 @@ bool naviServiceCallback(eac_pkg::EacGoal::Request& request, eac_pkg::EacGoal::R
     ROS_INFO("custom pose");
     goal.target_pose.pose = request.custom_goal;
   }else goal.target_pose.pose = poses.poses[request.goal_index];
+  response.state = true;
   goal_state goal_result = gotoGoal(goal, request.timeout);
+  if(goal_result != goal_state::SUCCEEDED)response.state = false;
+  response.extra_msg = static_cast<uint>(goal_result.state_);
   return true;
 }
 
@@ -51,7 +54,7 @@ int main(int argc, char* argv[]) {
   else if(side_color == SIDE_BLUE)poses.init_blue();
   else return 2;
 
-  ros::NodeHandle node_handle;
+  static ros::NodeHandle node_handle;
   global_nh = &node_handle;
   geometry_msgs::PoseWithCovarianceStamped init_start_pose;
   init_start_pose.header.frame_id = "map";
