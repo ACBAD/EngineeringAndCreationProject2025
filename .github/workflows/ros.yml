@@ -36,6 +36,6 @@ jobs:
         run: |
           mkdir -p ~/catkin_ws
           mkdir -p ~/catkin_ws/src
-          ln -s $GITHUB_WORKSPACE ~/catkin_ws/src/eac_pkg  # 替换为你的 ROS 包名
+          cp -r $GITHUB_WORKSPACE/* ~/catkin_ws/src/eac_pkg  # 替换为你的 ROS 包名
           cd ~/catkin_ws
           catkin_make
