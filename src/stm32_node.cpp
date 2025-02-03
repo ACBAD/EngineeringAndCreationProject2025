@@ -27,8 +27,6 @@ public:
   explicit EasyDocument(const rapidjson::Document& other){
     d.CopyFrom(other, d.GetAllocator());
   }
-
-  rapidjson::Document& extractDocument() const {return d;}
   template <typename T>
   auto getElementEasier(const char* key) const {
 
