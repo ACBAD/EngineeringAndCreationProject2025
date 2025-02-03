@@ -83,7 +83,7 @@ public:
       return;
     close(serial_port);
   }
-  rapidjson::Document tread(const int timeout_ms=200) const {
+  rapidjson::Document tread(const int timeout_ms) const {
     if(serial_port < 0) {
       ROS_WARN("Read failed: serial not open");
       return nullptr;
@@ -170,20 +170,20 @@ void sendAllArgs(const SerialDevice& sd) {
     return;
   std_msgs::UInt8 cover_cmd;
   cover_cmd.data = 0;
-  // rapidjson::Document raw_stm32_data(sd.tread(200));
-  // const EasyDocument stm32_data(raw_stm32_data);
-  // try {
-  //   total_right += stm32_data.getElementEasier<int64_t>("R");
-  //   total_left -= stm32_data.getElementEasier<int64_t>("L");
-  //   cover_cmd.data = stm32_data.getElementEasier<bool>("SC");
-  // }catch (std::runtime_error& e) {
-  //   ROS_WARN("Error in parsing: %s", e.what());
-  // }
-
-  rapidjson::Document stm32_data = std::move(sd.tread(200));
-  if(!stm32_data.IsNull()) {
-    ROS_DEBUG("%lu", stm32_data["R"].GetUint64());
+  rapidjson::Document raw_stm32_data(sd.tread(200));
+  const EasyDocument stm32_data(raw_stm32_data);
+  try {
+    total_right += stm32_data.getElementEasier<int64_t>("R");
+    total_left -= stm32_data.getElementEasier<int64_t>("L");
+    cover_cmd.data = stm32_data.getElementEasier<bool>("SC");
+  }catch (std::runtime_error& e) {
+    ROS_WARN("Error in parsing: %s", e.what());
   }
+
+  // rapidjson::Document stm32_data = std::move(sd.tread(200));
+  // if(!stm32_data.IsNull()) {
+  //   ROS_DEBUG("%lu", stm32_data["SC"].GetUint64());
+  // }
 
   std_msgs::Int32 R,L;
   R.data = total_right;
