@@ -24,7 +24,7 @@ class EasyDocument{
   rapidjson::Document* d;
 public:
   EasyDocument() = delete;
-  explicit EasyDocument(rapidjson::Document *other): d(other){}
+  explicit EasyDocument(rapidjson::Document *other_ptr): d(other_ptr){}
   template <typename T>
   auto getElementEasier(const char* key) const {
 
@@ -32,7 +32,7 @@ public:
       throw std::runtime_error("has parse error, or this is a null value");
     if(d->HasParseError())
       throw std::runtime_error("has parse error");
-
+    ROS_DEBUG("OK");
     const auto &dk = d->operator[](key);
     if(!d->HasMember(key)){
       char _[100];
@@ -171,6 +171,7 @@ void sendAllArgs(const SerialDevice& sd) {
   cover_cmd.data = 0;
   rapidjson::Document raw_stm32_data(sd.tread(200));
   const EasyDocument stm32_data(&raw_stm32_data);
+
   try {
     total_right += stm32_data.getElementEasier<int64_t>("R");
     total_left -= stm32_data.getElementEasier<int64_t>("L");
