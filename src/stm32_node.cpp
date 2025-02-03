@@ -37,14 +37,12 @@ public:
       throw std::runtime_error("has parse error, or this is a null value");
     if(d.HasParseError())
       throw std::runtime_error("has parse error");
-
-    const auto &dk = d[key];
     if(!d.HasMember(key)){
       char _[100];
       std::sprintf(_, "%s not exist", key);
       throw std::runtime_error(_);
     }
-
+    const auto &dk = d[key];
     auto throwType = [key](const char* type) {
       char _[100];
       std::sprintf(_, "%s is not %s", key, type);
