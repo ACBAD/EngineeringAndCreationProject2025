@@ -171,18 +171,18 @@ void sendAllArgs(const SerialDevice& sd) {
   if(write_count < 0)
     return;
   std_msgs::UInt8 cover_cmd;
-  rapidjson::Document stm32_data = std::move(sd.tread(200));
-  // EasyDocument stm32_data(std::move(sd.tread(200)));
-  // try {
-  //   total_right += stm32_data.getElementEasier<int64_t>("R");
-  //   total_left -= stm32_data.getElementEasier<int64_t>("L");
-  //   cover_cmd.data = stm32_data.getElementEasier<bool>("cover_state");
-  // }catch (std::runtime_error& e) {
-  //   ROS_WARN("Error in parsing: %s", e.what());
-  // }
-  if(!stm32_data.IsNull()) {
-    ROS_DEBUG("%lu", stm32_data["SC"].GetUint64());
+  EasyDocument stm32_data(std::move(sd.tread(200)));
+  try {
+    total_right += stm32_data.getElementEasier<int64_t>("R");
+    total_left -= stm32_data.getElementEasier<int64_t>("L");
+    cover_cmd.data = stm32_data.getElementEasier<bool>("cover_state");
+  }catch (std::runtime_error& e) {
+    ROS_WARN("Error in parsing: %s", e.what());
   }
+  // rapidjson::Document stm32_data = std::move(sd.tread(200));
+  // if(!stm32_data.IsNull()) {
+  //   ROS_DEBUG("%lu", stm32_data["SC"].GetUint64());
+  // }
   std_msgs::Int32 R,L;
   R.data = total_right;
   L.data = total_left;
