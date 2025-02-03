@@ -21,23 +21,20 @@ int32_t total_right = 0;
 int32_t total_left = 0;
 
 class EasyDocument{
-  rapidjson::Document d;
+  rapidjson::Document* d;
 public:
   EasyDocument() = delete;
-  explicit EasyDocument(rapidjson::Document& other){
-    d.SetObject();
-    d.CopyFrom(other, other.GetAllocator());
-  }
+  explicit EasyDocument(rapidjson::Document *other): d(other){}
   template <typename T>
   auto getElementEasier(const char* key) const {
 
-    if(d.IsNull())
+    if(d->IsNull())
       throw std::runtime_error("has parse error, or this is a null value");
-    if(d.HasParseError())
+    if(d->HasParseError())
       throw std::runtime_error("has parse error");
 
-    const auto &dk = d[key];
-    if(!d.HasMember(key)){
+    const auto &dk = d->operator[](key);
+    if(!d->HasMember(key)){
       char _[100];
       std::sprintf(_, "%s not exist", key);
       throw std::runtime_error(_);
@@ -173,7 +170,7 @@ void sendAllArgs(const SerialDevice& sd) {
   std_msgs::UInt8 cover_cmd;
   cover_cmd.data = 0;
   rapidjson::Document raw_stm32_data(sd.tread(200));
-  const EasyDocument stm32_data(raw_stm32_data);
+  const EasyDocument stm32_data(&raw_stm32_data);
   try {
     total_right += stm32_data.getElementEasier<int64_t>("R");
     total_left -= stm32_data.getElementEasier<int64_t>("L");
