@@ -25,11 +25,7 @@ class EasyDocument{
 public:
   EasyDocument() = delete;
   explicit EasyDocument(rapidjson::Document other): d(std::move(other)) {}
-  rapidjson::Document extractDocument(){
-    rapidjson::Document temp;
-    temp.Swap(d);
-    return temp;
-  }
+  rapidjson::Document extractDocument(){return std::move(d);}
   template <typename T>
   auto getElementEasier(const char* key) const {
 
@@ -167,28 +163,22 @@ void sendAllArgs(const SerialDevice& sd) {
   cmd_obj.AddMember("X", x, cmd_obj.GetAllocator());
   cmd_obj.AddMember("R", r, cmd_obj.GetAllocator());
   cmd_obj.AddMember("cover_cmd", global_cover.data, cmd_obj.GetAllocator());
-  const ssize_t write_count = sd.send(cmd_obj);
-  if(write_count < 0)
-    return;
-  std_msgs::UInt8 cover_cmd;
-  EasyDocument stm32_data(std::move(sd.tread(200)));
+  if(const ssize_t write_count = sd.send(cmd_obj); write_count < 0)return;
+  std_msgs::UInt8 cover_state;
+  const EasyDocument stm32_data(std::move(sd.tread(200)));
   try {
     total_right += stm32_data.getElementEasier<int64_t>("R");
     total_left -= stm32_data.getElementEasier<int64_t>("L");
-    cover_cmd.data = stm32_data.getElementEasier<bool>("cover_state");
+    cover_state.data = stm32_data.getElementEasier<bool>("cover_state");
   }catch (std::runtime_error& e) {
     ROS_WARN("Error in parsing: %s", e.what());
   }
-  // rapidjson::Document stm32_data = std::move(sd.tread(200));
-  // if(!stm32_data.IsNull()) {
-  //   ROS_DEBUG("%lu", stm32_data["SC"].GetUint64());
-  // }
   std_msgs::Int32 R,L;
   R.data = total_right;
   L.data = total_left;
   rw_pub.publish(R);
   lw_pub.publish(L);
-  cover_pub.publish(cover_cmd);
+  cover_pub.publish(cover_state);
 }
 
 int main(int argc, char* argv[]) {
@@ -202,7 +192,7 @@ int main(int argc, char* argv[]) {
   ros::Subscriber vel_sub = node_handle.subscribe("/cmd_vel", 2, updateMotorAction);
   ros::Subscriber cover_sub = node_handle.subscribe("/cover_cmd", 2, updateCoverAction);
   ros::Rate rate(20);
-  ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Debug);
+  ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Info);
   // ReSharper disable once CppTooWideScope
   const SerialDevice serial_device;
   global_twist.linear.x = 0;
