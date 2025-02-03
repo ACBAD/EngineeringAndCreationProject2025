@@ -24,12 +24,8 @@ class EasyDocument{
   rapidjson::Document d;
 public:
   EasyDocument() = delete;
-  explicit EasyDocument(rapidjson::Document&& other): d(std::move(other)) {}
-  rapidjson::Document extractDocument(){
-    rapidjson::Document temp;
-    temp.Swap(d);
-    return temp;
-  }
+  explicit EasyDocument(rapidjson::Document other): d(std::move(other)) {}
+  rapidjson::Document extractDocument(){return std::move(d);}
   template <typename T>
   auto getElementEasier(const char* key) const {
 

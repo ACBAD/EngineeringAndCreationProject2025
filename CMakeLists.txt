@@ -164,9 +164,6 @@ add_executable(visual_node src/visual_node.cpp)
 add_executable(schema2_node src/schema2_node.cpp)
 add_executable(navigation_node src/navigation_node.cpp)
 
-add_executable(rapidjson_test src/rapidjson_test.cpp)
-target_include_directories(rapidjson_test PRIVATE include)
-
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use
