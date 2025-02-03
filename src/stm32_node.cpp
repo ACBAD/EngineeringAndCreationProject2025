@@ -21,21 +21,25 @@ int32_t total_right = 0;
 int32_t total_left = 0;
 
 class EasyDocument{
-  rapidjson::Document* d;
+  rapidjson::Document d;
 public:
   EasyDocument() = delete;
-  explicit EasyDocument(rapidjson::Document *other_ptr): d(other_ptr){}
+  explicit EasyDocument(rapidjson::Document&& other): d(std::move(other)) {}
+  rapidjson::Document extractDocument(){
+    rapidjson::Document temp;
+    temp.Swap(d);
+    return temp;
+  }
   template <typename T>
   auto getElementEasier(const char* key) const {
 
-    if(d->IsNull())
+    if(d.IsNull())
       throw std::runtime_error("has parse error, or this is a null value");
-    if(d->HasParseError())
+    if(d.HasParseError())
       throw std::runtime_error("has parse error");
 
-    const auto &dk = d->operator[](key);
-    if(!d->HasMember(key)){
-      ROS_DEBUG("throw");
+    const auto &dk = d[key];
+    if(!d.HasMember(key)){
       char _[100];
       std::sprintf(_, "%s not exist", key);
       throw std::runtime_error(_);
@@ -169,23 +173,18 @@ void sendAllArgs(const SerialDevice& sd) {
   if(write_count < 0)
     return;
   std_msgs::UInt8 cover_cmd;
-  cover_cmd.data = 0;
-  rapidjson::Document raw_stm32_data(sd.tread(200));
-  const EasyDocument stm32_data(&raw_stm32_data);
-
-  try {
-    total_right += stm32_data.getElementEasier<int64_t>("R");
-    total_left -= stm32_data.getElementEasier<int64_t>("L");
-    cover_cmd.data = stm32_data.getElementEasier<bool>("SC");
-  }catch (std::runtime_error& e) {
-    ROS_WARN("Error in parsing: %s", e.what());
-  }
-
-  // rapidjson::Document stm32_data = std::move(sd.tread(200));
-  // if(!stm32_data.IsNull()) {
-  //   ROS_DEBUG("%lu", stm32_data["SC"].GetUint64());
+  rapidjson::Document stm32_data = std::move(sd.tread(200));
+  // EasyDocument stm32_data(std::move(sd.tread(200)));
+  // try {
+  //   total_right += stm32_data.getElementEasier<int64_t>("R");
+  //   total_left -= stm32_data.getElementEasier<int64_t>("L");
+  //   cover_cmd.data = stm32_data.getElementEasier<bool>("cover_state");
+  // }catch (std::runtime_error& e) {
+  //   ROS_WARN("Error in parsing: %s", e.what());
   // }
-
+  if(!stm32_data.IsNull()) {
+    ROS_DEBUG("%lu", stm32_data["SC"].GetUint64());
+  }
   std_msgs::Int32 R,L;
   R.data = total_right;
   L.data = total_left;
