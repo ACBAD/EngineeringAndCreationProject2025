@@ -175,6 +175,7 @@ void sendAllArgs(const SerialDevice& sd) {
   try {
     total_right += stm32_data.getElementEasier<int64_t>("R");
     total_left -= stm32_data.getElementEasier<int64_t>("L");
+    ROS_DEBUG("here down");
     cover_cmd.data = stm32_data.getElementEasier<bool>("SC");
   }catch (std::runtime_error& e) {
     ROS_WARN("Error in parsing: %s", e.what());
