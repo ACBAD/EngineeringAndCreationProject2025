@@ -21,10 +21,10 @@ int32_t total_right = 0;
 int32_t total_left = 0;
 
 class EasyDocument{
-  rapidjson::Document& d;
+  rapidjson::Document d;
 public:
   EasyDocument() = delete;
-  explicit EasyDocument(const rapidjson::Document& other): d() {
+  explicit EasyDocument(const rapidjson::Document& other){
     d.CopyFrom(other, d.GetAllocator());
   }
 
