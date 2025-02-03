@@ -171,7 +171,7 @@ void sendAllArgs(const SerialDevice& sd) {
   std_msgs::UInt8 cover_cmd;
   cover_cmd.data = 0;
 
-  EasyDocument stm32_data(std::move(sd.tread(200)));
+  EasyDocument stm32_data(sd.tread(200));
   try {
     total_right += stm32_data.getElementEasier<int64_t>("R");
     total_left -= stm32_data.getElementEasier<int64_t>("L");
