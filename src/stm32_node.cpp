@@ -168,7 +168,7 @@ void sendAllArgs(const SerialDevice& sd) {
   cmd_obj.SetObject();
   cmd_obj.AddMember("X", x, cmd_obj.GetAllocator());
   cmd_obj.AddMember("R", r, cmd_obj.GetAllocator());
-  cmd_obj.AddMember("SC", global_cover.data, cmd_obj.GetAllocator());
+  cmd_obj.AddMember("cover_cmd", global_cover.data, cmd_obj.GetAllocator());
   const ssize_t write_count = sd.send(cmd_obj);
   if(write_count < 0)
     return;
@@ -183,7 +183,7 @@ void sendAllArgs(const SerialDevice& sd) {
   //   ROS_WARN("Error in parsing: %s", e.what());
   // }
   if(!stm32_data.IsNull()) {
-    ROS_DEBUG("%lu", stm32_data["cover_cmd"].GetUint64());
+    ROS_DEBUG("%lu", stm32_data["SC"].GetUint64());
   }
   std_msgs::Int32 R,L;
   R.data = total_right;
