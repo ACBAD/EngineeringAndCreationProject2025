@@ -46,8 +46,11 @@ public:
       throw std::runtime_error(_);
     };
     if constexpr (std::is_same_v<std::decay_t<T>, bool>) {
-      if(!dk.IsBool())
+      if(!dk.IsBool()) {
+        ROS_DEBUG("throw");
         throwType("bool");
+      }
+
       return dk.GetBool();
     }
     if constexpr (std::is_same_v<std::decay_t<T>, std::string>) {
