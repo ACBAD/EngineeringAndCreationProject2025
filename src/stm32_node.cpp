@@ -24,7 +24,7 @@ class EasyDocument{
   rapidjson::Document d;
 public:
   EasyDocument() = delete;
-  explicit EasyDocument(rapidjson::Document&& other): d(std::move(other)) {}
+  explicit EasyDocument(rapidjson::Document other): d(std::move(other)) {}
   rapidjson::Document extractDocument(){
     rapidjson::Document temp;
     temp.Swap(d);
