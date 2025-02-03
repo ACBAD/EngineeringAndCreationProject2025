@@ -32,11 +32,12 @@ public:
       throw std::runtime_error("has parse error, or this is a null value");
     if(d->HasParseError())
       throw std::runtime_error("has parse error");
-    ROS_DEBUG("OK");
+
     const auto &dk = d->operator[](key);
     if(!d->HasMember(key)){
       char _[100];
       std::sprintf(_, "%s not exist", key);
+      ROS_DEBUG("throw");
       throw std::runtime_error(_);
     }
 
@@ -46,11 +47,8 @@ public:
       throw std::runtime_error(_);
     };
     if constexpr (std::is_same_v<std::decay_t<T>, bool>) {
-      if(!dk.IsBool()) {
-        ROS_DEBUG("throw");
+      if(!dk.IsBool())
         throwType("bool");
-      }
-
       return dk.GetBool();
     }
     if constexpr (std::is_same_v<std::decay_t<T>, std::string>) {
@@ -178,7 +176,6 @@ void sendAllArgs(const SerialDevice& sd) {
   try {
     total_right += stm32_data.getElementEasier<int64_t>("R");
     total_left -= stm32_data.getElementEasier<int64_t>("L");
-    ROS_DEBUG("here down");
     cover_cmd.data = stm32_data.getElementEasier<bool>("SC");
   }catch (std::runtime_error& e) {
     ROS_WARN("Error in parsing: %s", e.what());
