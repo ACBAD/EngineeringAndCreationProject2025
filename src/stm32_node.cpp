@@ -21,13 +21,11 @@ int32_t total_right = 0;
 int32_t total_left = 0;
 
 class EasyDocument{
-  rapidjson::Document d;
+  rapidjson::Document& d;
 public:
   EasyDocument() = delete;
-  explicit EasyDocument(rapidjson::Document other){
-    other.Swap(d);
-  }
-  rapidjson::Document extractDocument(){return std::move(d);}
+  explicit EasyDocument(rapidjson::Document& other): d(other) {}
+  rapidjson::Document& extractDocument() const {return d;}
   template <typename T>
   auto getElementEasier(const char* key) const {
 
@@ -172,8 +170,8 @@ void sendAllArgs(const SerialDevice& sd) {
     return;
   std_msgs::UInt8 cover_cmd;
   cover_cmd.data = 0;
-
-  EasyDocument stm32_data(sd.tread(200));
+  rapidjson::Document raw_stm32_data = sd.tread(200);
+  const EasyDocument stm32_data(raw_stm32_data);
   try {
     total_right += stm32_data.getElementEasier<int64_t>("R");
     total_left -= stm32_data.getElementEasier<int64_t>("L");
