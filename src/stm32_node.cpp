@@ -35,9 +35,9 @@ public:
 
     const auto &dk = d->operator[](key);
     if(!d->HasMember(key)){
+      ROS_DEBUG("throw");
       char _[100];
       std::sprintf(_, "%s not exist", key);
-      ROS_DEBUG("throw");
       throw std::runtime_error(_);
     }
 
