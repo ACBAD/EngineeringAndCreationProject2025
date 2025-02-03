@@ -25,6 +25,7 @@ class EasyDocument{
 public:
   EasyDocument() = delete;
   explicit EasyDocument(rapidjson::Document& other){
+    d.SetObject();
     d.CopyFrom(other, other.GetAllocator());
   }
   template <typename T>
