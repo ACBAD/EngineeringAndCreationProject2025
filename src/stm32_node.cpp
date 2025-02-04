@@ -191,7 +191,7 @@ int main(int argc, char* argv[]) {
   cover_pub = node_handle.advertise<std_msgs::UInt8>("/cover_state", 2);
   ros::Subscriber vel_sub = node_handle.subscribe("/cmd_vel", 2, updateMotorAction);
   ros::Subscriber cover_sub = node_handle.subscribe("/cover_cmd", 2, updateCoverAction);
-  ros::Rate rate(20);
+  ros::Rate rate(30);
   ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Info);
   // ReSharper disable once CppTooWideScope
   const SerialDevice serial_device;
