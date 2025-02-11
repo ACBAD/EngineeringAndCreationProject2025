@@ -20,6 +20,7 @@ find_package(catkin REQUIRED COMPONENTS
     message_generation
     message_runtime
     cv_bridge
+    image_transport
 )
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -163,6 +164,7 @@ add_executable(sound_node src/sound_node.cpp)
 add_executable(visual_node src/visual_node.cpp)
 add_executable(schema2_node src/schema2_node.cpp)
 add_executable(navigation_node src/navigation_node.cpp)
+add_executable(camera_node src/camera_node.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -175,6 +177,8 @@ add_executable(navigation_node src/navigation_node.cpp)
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
+
+target_link_libraries(camera_node ${catkin_LIBRARIES})
 target_include_directories(stm32_node PRIVATE include)
 target_link_libraries(stm32_node ${catkin_LIBRARIES})
 target_link_libraries(visual_node ${catkin_LIBRARIES})
