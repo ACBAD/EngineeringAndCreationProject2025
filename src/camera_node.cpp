@@ -9,7 +9,7 @@ int main(int argc, char** argv) {
   image_transport::ImageTransport it(nh);
   image_transport::Publisher pub = it.advertise("/camera", 1);
   ROS_INFO("Init ok");
-  cv::VideoCapture cap("/dev/video0"); // 打开默认摄像头
+  cv::VideoCapture cap(1); // 打开默认摄像头
   if (!cap.isOpened()) {
     ROS_ERROR("Cannot open camera");
     return -1;
