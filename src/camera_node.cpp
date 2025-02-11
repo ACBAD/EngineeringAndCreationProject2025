@@ -8,17 +8,18 @@ int main(int argc, char** argv) {
   ros::NodeHandle nh;
   image_transport::ImageTransport it(nh);
   image_transport::Publisher pub = it.advertise("/camera", 1);
-
+  ROS_INFO("Init ok");
   cv::VideoCapture cap(0); // 打开默认摄像头
   if (!cap.isOpened()) {
     ROS_ERROR("Cannot open camera");
     return -1;
   }
-
+  ROS_INFO("Camera open");
   cv::Mat frame;
   sensor_msgs::ImagePtr msg;
 
   ros::Rate loop_rate(30);
+  ROS_INFO("Start capture");
   while (nh.ok()) {
     cap >> frame;
     if (!frame.empty()) {
