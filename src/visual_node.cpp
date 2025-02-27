@@ -8,7 +8,7 @@
 // TODO 测量角度偏移系数
 #define ANGLE_SCALE 1.0
 // TODO 定义图像宽高
-#define IMAGE_HEIGHT 640
+#define IMAGE_HEIGHT 480
 #define IMAGE_WIDTH 640
 
 ros::Publisher objects_pub;

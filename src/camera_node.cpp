@@ -20,7 +20,7 @@ int main(int argc, char** argv) {
 
   ros::Rate loop_rate(30);
   ROS_INFO("Start capture");
-  while (nh.ok()) {
+  while (ros::ok()) {
     cap >> frame;
     if (!frame.empty()) {
       msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", frame).toImageMsg();
