@@ -168,7 +168,7 @@ void sendAllArgs(const SerialDevice& sd) {
   const EasyDocument stm32_data(std::move(sd.tread(200)));
   try {
     total_right = -stm32_data.getElementEasier<int64_t>("R");
-    total_left = -stm32_data.getElementEasier<int64_t>("L");
+    total_left = stm32_data.getElementEasier<int64_t>("L");
     cover_state.data = stm32_data.getElementEasier<bool>("cover_state");
   }catch (std::runtime_error& e) {
     ROS_WARN("Error in parsing: %s", e.what());
