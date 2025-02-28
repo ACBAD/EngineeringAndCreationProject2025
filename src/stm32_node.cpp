@@ -167,7 +167,7 @@ void sendAllArgs(const SerialDevice& sd) {
   std_msgs::UInt8 cover_state;
   const EasyDocument stm32_data(std::move(sd.tread(200)));
   try {
-    total_right = -stm32_data.getElementEasier<int64_t>("R");
+    total_right = stm32_data.getElementEasier<int64_t>("R");
     total_left = stm32_data.getElementEasier<int64_t>("L");
     cover_state.data = stm32_data.getElementEasier<bool>("cover_state");
   }catch (std::runtime_error& e) {
