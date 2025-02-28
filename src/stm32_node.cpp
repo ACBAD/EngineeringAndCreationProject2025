@@ -172,6 +172,7 @@ void sendAllArgs(const SerialDevice& sd) {
     cover_state.data = stm32_data.getElementEasier<bool>("cover_state");
   }catch (std::runtime_error& e) {
     ROS_WARN("Error in parsing: %s", e.what());
+    return;
   }
   std_msgs::Int32 R,L;
   R.data = total_right;
