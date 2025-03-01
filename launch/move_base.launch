@@ -1,10 +1,11 @@
 <launch>
     <node pkg="move_base" type="move_base" name="move_base">
-        <rosparam file="$(find wpb_home_tutorials)/nav_lidar/costmap_common_params.yaml" command="load" ns="global_costmap" />
-        <rosparam file="$(find wpb_home_tutorials)/nav_lidar/costmap_common_params.yaml" command="load" ns="local_costmap" />
-        <rosparam file="$(find wpb_home_tutorials)/nav_lidar/global_costmap_params.yaml" command="load" />
-        <rosparam file="$(find wpb_home_tutorials)/nav_lidar/local_costmap_params.yaml" command="load" />
+        <rosparam file="$(find eac_pkg)/params/costmap_common_params.yaml" command="load" ns="global_costmap" />
+        <rosparam file="$(find eac_pkg)/params/costmap_common_params.yaml" command="load" ns="local_costmap" />
+        <rosparam file="$(find eac_pkg)/params/global_costmap_params.yaml" command="load" />
+        <rosparam file="$(find eac_pkg)/params/local_costmap_params.yaml" command="load" />
         <param name="base_global_planner" value="global_planner/GlobalPlanner" />
-        <param name="base_local_planner" value="wpbh_local_planner/WpbhLocalPlanner" />
+        <param name="base_local_planner" value="dwa_local_planner/DWAPlannerROS" />
+        <rosparam file="$(find eac_pkg)/params/dwa_local_planner_params.yaml" command="load" />
     </node>
 </launch>
