@@ -14,7 +14,7 @@ DWAPlannerROS:
   max_vel_theta: 0.3      # 最大旋转速度，略小于基座的功能
   min_vel_theta: -0.01    # 当平移速度可以忽略时的最小角速度
   theta_stopped_vel: 0.1  # 当旋转速度小于这个值，就让机器人停止
-  acc_lim_theta: 6.0      # 旋转的加速度上限
+  acc_lim_theta: 0.5      # 旋转的加速度上限
 
   # 目标容差参数
   yaw_goal_tolerance: 0.1         # 目标航向容差
