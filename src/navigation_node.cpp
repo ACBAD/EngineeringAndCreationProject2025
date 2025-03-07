@@ -47,6 +47,7 @@ bool naviServiceCallback(eac_pkg::EacGoal::Request& request, eac_pkg::EacGoal::R
 
 int main(int argc, char* argv[]) {
   ros::init(argc, argv, "navigation_node");
+  static ros::NodeHandle node_handle;
 
   if(!ros::param::get("side_color", side_color)) {
     ROS_ERROR("side_color not define, fatal error");
@@ -56,7 +57,6 @@ int main(int argc, char* argv[]) {
   else if(side_color == SIDE_BLUE)poses.init_blue();
   else return 2;
 
-  static ros::NodeHandle node_handle;
   // global_nh = &node_handle;
   geometry_msgs::PoseWithCovarianceStamped init_start_pose;
   init_start_pose.header.frame_id = "map";
