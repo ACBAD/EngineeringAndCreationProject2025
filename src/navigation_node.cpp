@@ -6,13 +6,14 @@
 #include <geometry_msgs/Twist.h>
 #include <actionlib/client/simple_action_client.h>
 
-actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> ac("move_base", true);
+
 int side_color = -1;
 UserSetPose poses;
 // ros::NodeHandle* global_nh = nullptr;
 // typedef actionlib::SimpleClientGoalState goal_state;
 
 actionlib::SimpleClientGoalState gotoGoal(const move_base_msgs::MoveBaseGoal& goal, const uint8_t timeout=0) {
+  actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> ac("move_base", true);
   ac.sendGoal(goal);
   ROS_INFO("ac goal sent");
   bool timeout_reach = false;
@@ -74,6 +75,7 @@ int main(int argc, char* argv[]) {
   twist_pub.publish(init_rolling_twist);
   // ReSharper disable once CppExpressionWithoutSideEffects
   ros::Duration(5.0).sleep();
+  actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> ac("move_base", true);
   while(!ac.waitForServer(ros::Duration(5.0))){
     ROS_INFO("Waiting for the move_base action server to come up");
   }
