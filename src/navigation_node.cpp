@@ -30,18 +30,18 @@ actionlib::SimpleClientGoalState gotoGoal(const move_base_msgs::MoveBaseGoal& go
 }
 
 bool naviServiceCallback(eac_pkg::EacGoal::Request& request, eac_pkg::EacGoal::Response& response) {
-  ROS_INFO("request");
-  move_base_msgs::MoveBaseGoal goal;
-  goal.target_pose.header.frame_id = "map";
-  goal.target_pose.header.stamp = ros::Time::now();
-  if(request.goal_index == 0) {
-    ROS_INFO("custom pose");
-    goal.target_pose.pose = request.custom_goal;
-  }else goal.target_pose.pose = poses.poses[request.goal_index];
-  response.state = true;
-  goal_state goal_result = gotoGoal(goal, request.timeout);
-  if(goal_result != goal_state::SUCCEEDED)response.state = false;
-  response.extra_msg = static_cast<uint>(goal_result.state_);
+  // ROS_INFO("request");
+  // move_base_msgs::MoveBaseGoal goal;
+  // goal.target_pose.header.frame_id = "map";
+  // goal.target_pose.header.stamp = ros::Time::now();
+  // if(request.goal_index == 0) {
+  //   ROS_INFO("custom pose");
+  //   goal.target_pose.pose = request.custom_goal;
+  // }else goal.target_pose.pose = poses.poses[request.goal_index];
+  // response.state = true;
+  // goal_state goal_result = gotoGoal(goal, request.timeout);
+  // if(goal_result != goal_state::SUCCEEDED)response.state = false;
+  // response.extra_msg = static_cast<uint>(goal_result.state_);
   return true;
 }
 
