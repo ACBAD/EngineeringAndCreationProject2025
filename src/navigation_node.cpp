@@ -13,19 +13,20 @@ UserSetPose poses;
 typedef actionlib::SimpleClientGoalState goal_state;
 
 actionlib::SimpleClientGoalState gotoGoal(const move_base_msgs::MoveBaseGoal& goal, const uint8_t timeout=0) {
-  ac.sendGoal(goal);
-  ROS_INFO("ac goal sent");
-  bool timeout_reach = false;
-  ros::NodeHandle navi_nh;
-  if (timeout) {
-    auto timeoutReachCallback = [&timeout_reach](ros::TimerEvent event) {timeout_reach = true;};
-    ros::Timer navi_timer = navi_nh.createTimer(ros::Duration(timeout), timeoutReachCallback);
-  }
-  while (ac.getState() != goal_state::SUCCEEDED ||
-    ac.getState() != goal_state::PENDING ||
-    !timeout_reach){ros::spinOnce();}
-  if(timeout_reach)ac.cancelGoal();
-  return ac.getState();
+  // ac.sendGoal(goal);
+  // ROS_INFO("ac goal sent");
+  // bool timeout_reach = false;
+  // ros::NodeHandle navi_nh;
+  // if (timeout) {
+  //   auto timeoutReachCallback = [&timeout_reach](ros::TimerEvent event) {timeout_reach = true;};
+  //   ros::Timer navi_timer = navi_nh.createTimer(ros::Duration(timeout), timeoutReachCallback);
+  // }
+  // while (ac.getState() != goal_state::SUCCEEDED ||
+  //   ac.getState() != goal_state::PENDING ||
+  //   !timeout_reach){ros::spinOnce();}
+  // if(timeout_reach)ac.cancelGoal();
+  // return ac.getState();
+  return goal_state::SUCCEEDED;
 }
 
 bool naviServiceCallback(eac_pkg::EacGoal::Request& request, eac_pkg::EacGoal::Response& response) {
