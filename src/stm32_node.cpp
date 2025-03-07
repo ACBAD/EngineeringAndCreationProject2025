@@ -147,13 +147,9 @@ public:
   }
 };
 
-void updateMotorAction(const geometry_msgs::Twist& msg) {
-  global_twist = msg;
-}
+void updateMotorAction(const geometry_msgs::Twist& msg) {global_twist = msg;}
 
-void updateCoverAction(const std_msgs::UInt8& msg) {
-  cover_cmd = msg.data;
-}
+void updateCoverAction(const std_msgs::UInt8& msg) {cover_cmd = msg.data;}
 
 void sendAllArgs(const SerialDevice& sd) {
   const int x = std::min(static_cast<int>(global_twist.linear.x/MAX_LINEAR_SPEED*100), 100);

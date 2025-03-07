@@ -50,7 +50,6 @@ int main(int argc, char* argv[]) {
   ros::NodeHandle node_handle;
   // 此处开始为抽签完成后的调试阶段
   ROS_INFO("main start");
-  // 输入选择的位置，红方或者是蓝方
   if(!ros::param::get("side_color", side_color)) {
     ROS_ERROR("side_color not define, do you forget start navigation node?");
     return 1;
@@ -73,7 +72,7 @@ int main(int argc, char* argv[]) {
 
   ROS_INFO("ATTACK!");
   std_msgs::UInt8 cover_angle;
-  cover_angle.data = 160;
+  cover_angle.data = 30;
   // 先让罩子开始转
   cover_pub.publish(cover_angle);
   ROS_INFO("rolling cover!");
@@ -93,7 +92,7 @@ int main(int argc, char* argv[]) {
   while (!cover_state) {ros::spinOnce();}
   ROS_INFO("cover ready, covering!");
   cover_state = false;
-  cover_angle.data = 180;
+  cover_angle.data = 5;
   // 就位后马上罩住
   cover_pub.publish(cover_angle);
   // spinOnce can call updateCoverState
@@ -121,7 +120,7 @@ int main(int argc, char* argv[]) {
   if((side_color == SIDE_RED && has_blue) || (side_color == SIDE_BLUE && has_red)) {
     ROS_ERROR("wrong object state, use schema 2");
     cover_state = false;
-    cover_angle.data = 0;
+    cover_angle.data = 195;
     // 抬起罩子
     cover_pub.publish(cover_angle);
     // spinOnce can call updateCoverState
@@ -132,7 +131,7 @@ int main(int argc, char* argv[]) {
   }
 
   cover_state = false;
-  cover_angle.data = 0;
+  cover_angle.data = 195;
   // 抬起罩子
   cover_pub.publish(cover_angle);
   // spinOnce can call updateCoverState

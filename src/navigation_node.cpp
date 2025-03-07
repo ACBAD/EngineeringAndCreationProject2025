@@ -9,16 +9,17 @@
 actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> ac("move_base", true);
 int side_color = -1;
 UserSetPose poses;
-ros::NodeHandle* global_nh = nullptr;
+// ros::NodeHandle* global_nh = nullptr;
 typedef actionlib::SimpleClientGoalState goal_state;
 
 actionlib::SimpleClientGoalState gotoGoal(const move_base_msgs::MoveBaseGoal& goal, const uint8_t timeout=0) {
   ac.sendGoal(goal);
   ROS_INFO("ac goal sent");
   bool timeout_reach = false;
+  ros::NodeHandle navi_nh;
   if (timeout) {
     auto timeoutReachCallback = [&timeout_reach](ros::TimerEvent event) {timeout_reach = true;};
-    ros::Timer navi_timer = global_nh->createTimer(ros::Duration(timeout), timeoutReachCallback);
+    ros::Timer navi_timer = navi_nh.createTimer(ros::Duration(timeout), timeoutReachCallback);
   }
   while (ac.getState() != goal_state::SUCCEEDED ||
     ac.getState() != goal_state::PENDING ||
@@ -55,7 +56,7 @@ int main(int argc, char* argv[]) {
   else return 2;
 
   static ros::NodeHandle node_handle;
-  global_nh = &node_handle;
+  // global_nh = &node_handle;
   geometry_msgs::PoseWithCovarianceStamped init_start_pose;
   init_start_pose.header.frame_id = "map";
   init_start_pose.header.stamp = ros::Time::now();
