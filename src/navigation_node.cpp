@@ -6,12 +6,6 @@
 #include <geometry_msgs/Twist.h>
 #include <actionlib/client/simple_action_client.h>
 
-actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> ac("move_base", true);
-int side_color = -1;
-UserSetPose poses;
-// ros::NodeHandle* global_nh = nullptr;
-typedef actionlib::SimpleClientGoalState goal_state;
-
 actionlib::SimpleClientGoalState gotoGoal(const move_base_msgs::MoveBaseGoal& goal, const uint8_t timeout=0) {
   // ac.sendGoal(goal);
   // ROS_INFO("ac goal sent");
@@ -26,7 +20,7 @@ actionlib::SimpleClientGoalState gotoGoal(const move_base_msgs::MoveBaseGoal& go
   //   !timeout_reach){ros::spinOnce();}
   // if(timeout_reach)ac.cancelGoal();
   // return ac.getState();
-  return goal_state::SUCCEEDED;
+  return actionlib::SimpleClientGoalState::SUCCEEDED;
 }
 
 bool naviServiceCallback(eac_pkg::EacGoal::Request& request, eac_pkg::EacGoal::Response& response) {
@@ -47,6 +41,11 @@ bool naviServiceCallback(eac_pkg::EacGoal::Request& request, eac_pkg::EacGoal::R
 
 int main(int argc, char* argv[]) {
   ros::init(argc, argv, "navigation_node");
+  actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> ac("move_base", true);
+  int side_color = -1;
+  UserSetPose poses;
+  // ros::NodeHandle* global_nh = nullptr;
+  typedef actionlib::SimpleClientGoalState goal_state;
   static ros::NodeHandle node_handle;
 
   if(!ros::param::get("side_color", side_color)) {
