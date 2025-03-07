@@ -16,7 +16,7 @@ ros::Publisher rw_pub;
 ros::Publisher lw_pub;
 ros::Publisher cover_pub;
 geometry_msgs::Twist global_twist;
-std_msgs::UInt8 global_cover;
+uint8_t cover_cmd;
 int32_t total_right = 0;
 int32_t total_left = 0;
 
@@ -152,7 +152,7 @@ void updateMotorAction(const geometry_msgs::Twist& msg) {
 }
 
 void updateCoverAction(const std_msgs::UInt8& msg) {
-  global_cover = msg;
+  cover_cmd = msg.data;
 }
 
 void sendAllArgs(const SerialDevice& sd) {
@@ -162,7 +162,7 @@ void sendAllArgs(const SerialDevice& sd) {
   cmd_obj.SetObject();
   cmd_obj.AddMember("X", x, cmd_obj.GetAllocator());
   cmd_obj.AddMember("R", r, cmd_obj.GetAllocator());
-  cmd_obj.AddMember("cover_cmd", global_cover.data, cmd_obj.GetAllocator());
+  cmd_obj.AddMember("cover_cmd", cover_cmd, cmd_obj.GetAllocator());
   if(const ssize_t write_count = sd.send(cmd_obj); write_count < 0)return;
   std_msgs::UInt8 cover_state;
   const EasyDocument stm32_data(std::move(sd.tread(200)));
