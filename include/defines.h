@@ -73,7 +73,7 @@ enum ObjectColor {
 };
 
 inline bool checkInfoAviliable(const ros::Time infoTime, const ros::Duration delta = ros::Duration(0.01)) {
-  if(ros::Time::now() - infoTime > delta)return false;
+  // if(ros::Time::now() - infoTime > delta)return false;
   return true;
 }
 
