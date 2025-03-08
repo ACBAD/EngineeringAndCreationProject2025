@@ -71,7 +71,7 @@ int main(int argc, char* argv[]) {
   ROS_INFO("initialpose sent, rolling for amcl");
   geometry_msgs::Twist init_rolling_twist{};
   // 高速旋转初始化amcl
-  init_rolling_twist.angular.z = 99999999;
+  init_rolling_twist.angular.z = 0.3;
   const ros::Publisher twist_pub = node_handle.advertise<geometry_msgs::Twist>("/cmd_vel", 2);
   twist_pub.publish(init_rolling_twist);
   // ReSharper disable once CppExpressionWithoutSideEffects
