@@ -178,17 +178,11 @@ def inference(input_image):
     #img = cv.cvtColor(img, cv.COLOR_BGR2RGB)
     cv_img = []
     cv_img.append(img)
-    print('Done.')
-
-    print('Start inference ...')
-    start = time.time()
 
     '''
         default input_tensor is 1
     '''
     data = yolov3.nn_inference(cv_img, platform='ONNX', reorder='2 1 0', output_tensor=3, output_format=output_format.OUT_FORMAT_FLOAT32)
-    end = time.time()
-    print('Done. inference time: ', end - start)
 
     input0_data = data[2]
     input1_data = data[1]

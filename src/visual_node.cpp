@@ -19,9 +19,9 @@ void visualCallback(const eac_pkg::VrResultConstPtr& msg) {
   constexpr char invalid_msg[] = "visual data invalid!!! (%s) drop it";
   if(msg->locations.layout.dim[0].size != now_count) {
     ROS_WARN(invalid_msg, "locations size not match count");
-    return;}if(msg->colors.layout.dim.size() != now_count) {
+    return;}if(msg->colors.data.size() != now_count) {
     ROS_WARN(invalid_msg, "colors size not match count");
-    return;}if(msg->shapes.layout.dim.size() != now_count) {
+    return;}if(msg->shapes.data.size() != now_count) {
     ROS_WARN(invalid_msg, "colors size not match count");
     return;
   }
