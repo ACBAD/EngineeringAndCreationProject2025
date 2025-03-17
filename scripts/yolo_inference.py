@@ -25,6 +25,7 @@ if __name__ == "__main__":
         read_state, cap_img = cap.read()
         if not read_state:
             rospy.logwarn("Cam read failed")
+            continue
         
         # Inference
         boxes, scores, classes = inference(cap_img)
@@ -57,7 +58,7 @@ if __name__ == "__main__":
         vr_msg.shapes.data = tuple(shape_data)
         pub.publish(vr_msg)
         ips += 1
-        if time.time() - last_log_time < 1:
+        if time.time() - last_log_time >= 1:
             rospy.loginfo(f'ips is {ips}')
             last_log_time = time.time()
             ips = 0
