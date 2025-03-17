@@ -3,7 +3,9 @@
 
 from typing import cast
 import cv2
+from numpy.matrixlib.defmatrix import N
 import rospy
+from std_msgs.msg import MultiArrayDimension
 from eac_pkg.msg import VrResult
 from yolov8n import inference
 import numpy
@@ -21,14 +23,19 @@ if __name__ == "__main__":
         read_state, cap_img = cap.read()
         if not read_state:
             rospy.logwarn("Cam read failed")
+        
+        # Inference
         boxes, scores, classes = inference(cap_img)
+
         vr_msg = VrResult()
         vr_msg.header.frame_id = "map"
         vr_msg.header.stamp = rospy.Time.now()
         boxes = cast(numpy.ndarray, boxes)
+        if not boxes:
+            continue
         vr_msg.count.data = len(boxes)
         # Start fill locations data
-        vr_msg.locations.layout.dim = []
+        vr_msg.locations.layout.dim = [MultiArrayDimension(), MultiArrayDimension()]
         vr_msg.locations.layout.dim[0].size = len(boxes)
         vr_msg.locations.layout.dim[1].stride = 4
         location_data = []
