@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 #coding=utf-8
 
+import time
 from typing import cast
 import cv2
-from numpy.matrixlib.defmatrix import N
 import rospy
 from std_msgs.msg import MultiArrayDimension
 from eac_pkg.msg import VrResult
@@ -13,13 +13,15 @@ import numpy
 IMAGE_WIDTH = 640
 IMAGE_HEIGHT = 640
 
+last_log_time = time.time()
+ips = 0
+
 if __name__ == "__main__":
     rospy.init_node("yolo_node")
     rospy.logwarn("yolo_node started")
     pub = rospy.Publisher("/visual_data", VrResult, queue_size=2)
     cap = cv2.VideoCapture(0)
     while not rospy.is_shutdown():
-        rospy.loginfo("Start inference")
         read_state, cap_img = cap.read()
         if not read_state:
             rospy.logwarn("Cam read failed")
@@ -54,4 +56,8 @@ if __name__ == "__main__":
         vr_msg.colors.data = tuple(color_data)
         vr_msg.shapes.data = tuple(shape_data)
         pub.publish(vr_msg)
-        #time.sleep(1)
+        ips += 1
+        if time.time() - last_log_time < 1:
+            rospy.loginfo(f'ips is {ips}')
+            last_log_time = time.time()
+            ips = 0
