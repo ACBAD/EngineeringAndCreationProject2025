@@ -47,10 +47,10 @@ if __name__ == "__main__":
         classes = cast(numpy.ndarray, classes)
         for box, color_num in zip(boxes, classes):
             x1, y1, x2, y2 = box
-            location_data.append(x1 * IMAGE_WIDTH)
-            location_data.append(x2 * IMAGE_WIDTH)
-            location_data.append(y1 * IMAGE_HEIGHT)
-            location_data.append(y2 * IMAGE_HEIGHT)
+            location_data.append(int(x1 * IMAGE_WIDTH) if x1 > 0 else 0)
+            location_data.append(int(x2 * IMAGE_WIDTH) if x2 > 0 else 0)
+            location_data.append(int(y1 * IMAGE_HEIGHT) if y1 > 0 else 0)
+            location_data.append(int(y2 * IMAGE_HEIGHT) if y2 > 0 else 0)
             color_data.append(color_num)
             shape_data.append(0)
         vr_msg.locations.data = tuple(location_data)
