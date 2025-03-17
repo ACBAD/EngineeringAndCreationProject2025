@@ -203,7 +203,7 @@ yolov3 = KSNN('VIM3')
 print(' |---+ KSNN Version: {} +---| '.format(yolov3.get_nn_version()))
 
 print('Start init neural network ...')
-yolov3.nn_init(library='/home/khadas/catkin/src/EngineeringAndCreationProject2025/scripts/libnn_eac_model.so', model='/home/khadas/catkin/src/EngineeringAndCreationProject2025/scripts/eac_model.nb', level=1)
+yolov3.nn_init(library='/home/khadas/catkin/src/EngineeringAndCreationProject2025/scripts/libnn_eac_model.so', model='/home/khadas/catkin/src/EngineeringAndCreationProject2025/scripts/eac_model.nb', level=0)
 print('Done.')
 
 if __name__ == "__main__":
