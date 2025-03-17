@@ -22,7 +22,7 @@ void visualCallback(const eac_pkg::VrResultConstPtr& msg) {
     return;}if(msg->colors.data.size() != now_count) {
     ROS_WARN(invalid_msg, "colors size not match count");
     return;}if(msg->shapes.data.size() != now_count) {
-    ROS_WARN(invalid_msg, "colors size not match count");
+    ROS_WARN(invalid_msg, "shapes size not match count");
     return;
   }
 
