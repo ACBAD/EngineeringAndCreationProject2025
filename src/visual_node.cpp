@@ -4,7 +4,7 @@
 #include <eac_pkg/ObjectInfoArray.h>
 
 // TODO 测量距离系数
-#define DISTANCE_SCALE 0.025
+#define DISTANCE_SCALE 0.0815217391304
 // TODO 测量角度偏移系数
 #define ANGLE_SCALE -0.01
 // TODO 定义图像宽高
@@ -59,7 +59,7 @@ void visualCallback(const eac_pkg::VrResultConstPtr& msg) {
     const double visual_diagonal = sqrt(pow((ltx_location - rbx_location), 2) + pow((lty_location - rby_location), 2));
     const double distance = DISTANCE_SCALE * visual_diagonal / ball_diagonal;
     const double center_x = (ltx_location + rbx_location) / 2;
-    const double angle = ANGLE_SCALE * center_x - IMAGE_WIDTH / 2;
+    const double angle = ANGLE_SCALE * (center_x - IMAGE_WIDTH / 2);
 
     objects.data[object_index].angle = angle;
     objects.data[object_index].distance = distance;
