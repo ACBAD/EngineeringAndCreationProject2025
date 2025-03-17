@@ -4,11 +4,11 @@
 #include <eac_pkg/ObjectInfoArray.h>
 
 // TODO 测量距离系数
-#define DISTANCE_SCALE 1.0
+#define DISTANCE_SCALE 0.025
 // TODO 测量角度偏移系数
-#define ANGLE_SCALE 1.0
+#define ANGLE_SCALE -0.01
 // TODO 定义图像宽高
-#define IMAGE_HEIGHT 480
+#define IMAGE_HEIGHT 640
 #define IMAGE_WIDTH 640
 
 ros::Publisher objects_pub;
