@@ -31,7 +31,7 @@ if __name__ == "__main__":
         vr_msg.header.frame_id = "map"
         vr_msg.header.stamp = rospy.Time.now()
         boxes = cast(numpy.ndarray, boxes)
-        if not boxes:
+        if boxes is None:
             continue
         vr_msg.count.data = len(boxes)
         # Start fill locations data
