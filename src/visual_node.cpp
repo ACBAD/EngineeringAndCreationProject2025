@@ -3,11 +3,8 @@
 #include <eac_pkg/ObjectInfo.h>
 #include <eac_pkg/ObjectInfoArray.h>
 
-// TODO 测量距离系数
 #define DISTANCE_SCALE 0.0815217391304
-// TODO 测量角度偏移系数
-#define ANGLE_SCALE -0.01
-// TODO 定义图像宽高
+#define ANGLE_SCALE 1.0
 #define IMAGE_HEIGHT 640
 #define IMAGE_WIDTH 640
 

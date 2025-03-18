@@ -18,6 +18,10 @@ ips = 0
 
 if __name__ == "__main__":
     rospy.init_node("yolo_node")
+    side_color = rospy.get_param('side_color')
+    if not side_color:
+        rospy.logfatal('Please set side_color!!!')
+        exit(1)
     rospy.logwarn("yolo_node started")
     pub = rospy.Publisher("/visual_data", VrResult, queue_size=2)
     cap = cv2.VideoCapture(0)

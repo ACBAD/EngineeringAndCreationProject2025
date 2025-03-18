@@ -7,10 +7,8 @@
 #include <geometry_msgs/Pose.h>
 constexpr double pi = 3.1415926535897932384626;
 
-// TODO 测量距离容忍极限
-#define DISTANCE_TOLERANCE_LIMIT 1.0
-// TODO 测量极限转换系数
-#define ANGLE_TOLERANCE_LIMIT 1.0
+#define DISTANCE_TOLERANCE_LIMIT 9999999999999
+#define ANGLE_TOLERANCE_LIMIT 199999999999999
 
 enum SideColor {
   SIDE_RED,

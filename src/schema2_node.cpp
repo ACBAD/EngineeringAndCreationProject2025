@@ -210,6 +210,7 @@ int main(int argc, char* argv[]) {
       cover_state = false;
       // ReSharper disable once CppDFALoopConditionNotUpdated
       while (!cover_state){ros::spinOnce();}
+      sys_state = 0;
       break;
     }
     default: {
