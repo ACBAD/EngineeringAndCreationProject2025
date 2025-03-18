@@ -18,8 +18,9 @@ ips = 0
 
 if __name__ == "__main__":
     rospy.init_node("yolo_node")
-    side_color = rospy.get_param('side_color')
-    if not side_color:
+    try:    
+        side_color = rospy.get_param('side_color')
+    except KeyError:
         rospy.logfatal('Please set side_color!!!')
         exit(1)
     rospy.logwarn("yolo_node started")
