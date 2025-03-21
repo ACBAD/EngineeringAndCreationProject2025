@@ -11,6 +11,8 @@ from ksnn.api import KSNN
 from ksnn.types import *
 import cv2 as cv
 import time
+from eac_cv import create_mask, calculate_ratio
+
 
 GRID0 = 20
 GRID1 = 40
@@ -54,7 +56,6 @@ def process(input):
     result[..., 1] = np.dot(box_1, constant_martix)[..., 0]
     result[..., 2] = np.dot(box_2, constant_martix)[..., 0]
     result[..., 3] = np.dot(box_3, constant_martix)[..., 0]
-
     col = np.tile(np.arange(0, grid_w), grid_w).reshape(-1, grid_w)
     row = np.tile(np.arange(0, grid_h).reshape(-1, 1), grid_h)
 
@@ -166,7 +167,7 @@ def draw(image, boxes, scores, classes):
                     cv.FONT_HERSHEY_SIMPLEX,
                     0.6, (0, 0, 255), 2)
 
-def inference(input_image):
+def inference(input_image, do_filter=False):
     orig_img = input_image
     img = cv.resize(orig_img, (640, 640)).astype(np.float32)
     img[:, :, 0] = img[:, :, 0] - mean[0]
@@ -197,7 +198,22 @@ def inference(input_image):
     input_data.append(np.transpose(input1_data, (2, 3, 0, 1)))
     input_data.append(np.transpose(input2_data, (2, 3, 0, 1)))
     
-    return yolov3_post_process(input_data)
+    boxes, scores, classes = yolov3_post_process(input_data)
+    if not do_filter:
+        return boxes, scores, classes
+    
+    filtered_boxes = []
+    filtered_scores = []
+    filtered_classes = []
+    for box, score, class_id in zip(boxes, scores, classes):
+        mask = create_mask(img, box)
+        color_ratio = calculate_ratio(img, mask, True if class_id == 0 else False)
+        if color_ratio < 0.8:
+            filtered_boxes.append(box)
+            filtered_scores.append(score)
+            filtered_classes.append(class_id)
+    return np.concatenate(filtered_boxes), np.concatenate(filtered_scores), np.concatenate(filtered_classes)
+
 
 yolov3 = KSNN('VIM3')
 print(' |---+ KSNN Version: {} +---| '.format(yolov3.get_nn_version()))
