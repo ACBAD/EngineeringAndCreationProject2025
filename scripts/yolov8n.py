@@ -150,8 +150,8 @@ def draw(image, boxes, scores, classes):
 
     for box, score, cl in zip(boxes, scores, classes):
         x1, y1, x2, y2 = box
-        print('class: {}, score: {}'.format(CLASSES[cl], score))
-        print('box coordinate left,top,right,down: [{}, {}, {}, {}]'.format(x1, y1, x2, y2))
+        #print('class: {}, score: {}'.format(CLASSES[cl], score))
+        #print('box coordinate left,top,right,down: [{}, {}, {}, {}]'.format(x1, y1, x2, y2))
         x1 *= image.shape[1]
         y1 *= image.shape[0]
         x2 *= image.shape[1]
@@ -201,17 +201,27 @@ def inference(input_image, do_filter=False):
     boxes, scores, classes = yolov3_post_process(input_data)
     if not do_filter:
         return boxes, scores, classes
-    
+    if boxes is None:
+    	return None, None, None
     filtered_boxes = []
     filtered_scores = []
     filtered_classes = []
     for box, score, class_id in zip(boxes, scores, classes):
-        mask = create_mask(img, box)
-        color_ratio = calculate_ratio(img, mask, True if class_id == 0 else False)
-        if color_ratio < 0.8:
-            filtered_boxes.append(box)
-            filtered_scores.append(score)
-            filtered_classes.append(class_id)
+    	if class_id not in (1, 3):
+    	    filtered_boxes.append(box[None])
+            filtered_scores.append(score[None])
+            filtered_classes.append(class_id[None])
+            continue
+        mask = create_mask(orig_img, box)
+        color_ratio = calculate_ratio(orig_img, mask, True if class_id == 1 else False)
+        if color_ratio < 0.7:
+            filtered_boxes.append(box[None])
+            filtered_scores.append(score[None])
+            filtered_classes.append(class_id[None])|\A[ _a-zA-Z0-9]+\z|is
+    if not filtered_boxes:
+    	return None, None, None
+    #print(f"Origin data: {(boxes, scores, classes)}")
+    #print(f"My data: {(filtered_boxes, filtered_scores, filtered_classes)}")
     return np.concatenate(filtered_boxes), np.concatenate(filtered_scores), np.concatenate(filtered_classes)
 
 
@@ -219,7 +229,7 @@ yolov3 = KSNN('VIM3')
 print(' |---+ KSNN Version: {} +---| '.format(yolov3.get_nn_version()))
 
 print('Start init neural network ...')
-yolov3.nn_init(library='/home/khadas/catkin/src/EngineeringAndCreationProject2025/scripts/libnn_eac_model.so', model='/home/khadas/catkin/src/EngineeringAndCreationProject2025/scripts/eac_model.nb', level=0)
+yolov3.nn_init(library='/home/khadas/catkin/src/EngineeringAndCreationProject2025/scripts/libnn_new_eac.so', model='/home/khadas/catkin/src/EngineeringAndCreationProject2025/scripts/new_eac.nb', level=0)
 print('Done.')
 
 if __name__ == "__main__":
@@ -228,7 +238,7 @@ if __name__ == "__main__":
     while 1:
         #orig_img = cv.imread('./test.jpg', cv.IMREAD_COLOR)
         _, output_img = cap.read()
-        boxes, scores, classes = inference(output_img)
+        boxes, scores, classes = inference(output_img, True)
         if boxes is not None:
             draw(output_img, boxes, scores, classes)
         cv.imshow("results", output_img)
