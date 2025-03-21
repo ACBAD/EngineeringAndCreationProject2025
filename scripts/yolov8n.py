@@ -13,7 +13,6 @@ import cv2 as cv
 import time
 from eac_cv import create_mask, calculate_ratio
 
-
 GRID0 = 20
 GRID1 = 40
 GRID2 = 80
@@ -26,31 +25,33 @@ NMS_THRESH = 0.5
 mean = [0, 0, 0]
 var = [255]
 
-constant_martix = np.array([[0,  1,  2,  3,
-			     4,  5,  6,  7,
-			     8,  9,  10, 11,
-			     12, 13, 14, 15]]).T
+constant_martix = np.array([[0, 1, 2, 3,
+                             4, 5, 6, 7,
+                             8, 9, 10, 11,
+                             12, 13, 14, 15]]).T
 
-CLASSES = ('black', 'red', 'yellow', 'blue')
+CLASSES = ('red', 'yellow', 'blue', 'black')
+
 
 def sigmoid(x):
     return 1 / (1 + np.exp(-x))
 
+
 def softmax(x, axis=0):
-	x = np.exp(x)
-	return x / x.sum(axis=axis, keepdims=True)
+    x = np.exp(x)
+    return x / x.sum(axis=axis, keepdims=True)
+
 
 def process(input):
-
     grid_h, grid_w = map(int, input.shape[0:2])
 
     box_class_probs = sigmoid(input[..., :NUM_CLS])
-    
+
     box_0 = softmax(input[..., NUM_CLS: NUM_CLS + 16], -1)
     box_1 = softmax(input[..., NUM_CLS + 16:NUM_CLS + 32], -1)
     box_2 = softmax(input[..., NUM_CLS + 32:NUM_CLS + 48], -1)
     box_3 = softmax(input[..., NUM_CLS + 48:NUM_CLS + 64], -1)
-    
+
     result = np.zeros((grid_h, grid_w, 1, 4))
     result[..., 0] = np.dot(box_0, constant_martix)[..., 0]
     result[..., 1] = np.dot(box_1, constant_martix)[..., 0]
@@ -68,8 +69,8 @@ def process(input):
 
     return result, box_class_probs
 
-def filter_boxes(boxes, box_class_probs):
 
+def filter_boxes(boxes, box_class_probs):
     box_classes = np.argmax(box_class_probs, axis=-1)
     box_class_scores = np.max(box_class_probs, axis=-1)
     pos = np.where(box_class_scores >= OBJ_THRESH)
@@ -80,8 +81,8 @@ def filter_boxes(boxes, box_class_probs):
 
     return boxes, classes, scores
 
-def nms_boxes(boxes, scores):
 
+def nms_boxes(boxes, scores):
     x1 = boxes[:, 0]
     y1 = boxes[:, 1]
     x2 = boxes[:, 2]
@@ -146,12 +147,12 @@ def yolov3_post_process(input_data):
 
     return boxes, scores, classes
 
-def draw(image, boxes, scores, classes):
 
+def draw(image, boxes, scores, classes):
     for box, score, cl in zip(boxes, scores, classes):
         x1, y1, x2, y2 = box
-        #print('class: {}, score: {}'.format(CLASSES[cl], score))
-        #print('box coordinate left,top,right,down: [{}, {}, {}, {}]'.format(x1, y1, x2, y2))
+        # print('class: {}, score: {}'.format(CLASSES[cl], score))
+        # print('box coordinate left,top,right,down: [{}, {}, {}, {}]'.format(x1, y1, x2, y2))
         x1 *= image.shape[1]
         y1 *= image.shape[0]
         x2 *= image.shape[1]
@@ -163,9 +164,10 @@ def draw(image, boxes, scores, classes):
 
         cv.rectangle(image, (left, top), (right, bottom), (255, 0, 0), 2)
         cv.putText(image, '{0} {1:.2f}'.format(CLASSES[cl], score),
-                    (left, top - 6),
-                    cv.FONT_HERSHEY_SIMPLEX,
-                    0.6, (0, 0, 255), 2)
+                   (left, top - 6),
+                   cv.FONT_HERSHEY_SIMPLEX,
+                   0.6, (0, 0, 255), 2)
+
 
 def inference(input_image, do_filter=False):
     orig_img = input_image
@@ -174,16 +176,17 @@ def inference(input_image, do_filter=False):
     img[:, :, 1] = img[:, :, 1] - mean[1]
     img[:, :, 2] = img[:, :, 2] - mean[2]
     img = img / var[0]
-    
+
     img = img.transpose(2, 0, 1)
-    #img = cv.cvtColor(img, cv.COLOR_BGR2RGB)
+    # img = cv.cvtColor(img, cv.COLOR_BGR2RGB)
     cv_img = []
     cv_img.append(img)
 
     '''
         default input_tensor is 1
     '''
-    data = yolov3.nn_inference(cv_img, platform='ONNX', reorder='2 1 0', output_tensor=3, output_format=output_format.OUT_FORMAT_FLOAT32)
+    data = yolov3.nn_inference(cv_img, platform='ONNX', reorder='2 1 0', output_tensor=3,
+                               output_format=output_format.OUT_FORMAT_FLOAT32)
 
     input0_data = data[2]
     input1_data = data[1]
@@ -197,31 +200,33 @@ def inference(input_image, do_filter=False):
     input_data.append(np.transpose(input0_data, (2, 3, 0, 1)))
     input_data.append(np.transpose(input1_data, (2, 3, 0, 1)))
     input_data.append(np.transpose(input2_data, (2, 3, 0, 1)))
-    
+
     boxes, scores, classes = yolov3_post_process(input_data)
     if not do_filter:
         return boxes, scores, classes
     if boxes is None:
-    	return None, None, None
+        return None, None, None
     filtered_boxes = []
     filtered_scores = []
     filtered_classes = []
     for box, score, class_id in zip(boxes, scores, classes):
-    	if class_id not in (1, 3):
-    	    filtered_boxes.append(box[None])
+        if class_id not in (0, 2):
+            filtered_boxes.append(box[None])
             filtered_scores.append(score[None])
             filtered_classes.append(class_id[None])
             continue
         mask = create_mask(orig_img, box)
-        color_ratio = calculate_ratio(orig_img, mask, True if class_id == 1 else False)
-        if color_ratio < 0.7:
+        color_ratio = calculate_ratio(orig_img, mask, True if class_id == 0 else False)
+        if color_ratio < 0.5:
             filtered_boxes.append(box[None])
             filtered_scores.append(score[None])
-            filtered_classes.append(class_id[None])|\A[ _a-zA-Z0-9]+\z|is
+            filtered_classes.append(class_id[None])
+        else:
+            print(f"Detect dang zone at {box}")
     if not filtered_boxes:
-    	return None, None, None
-    #print(f"Origin data: {(boxes, scores, classes)}")
-    #print(f"My data: {(filtered_boxes, filtered_scores, filtered_classes)}")
+        return None, None, None
+    # print(f"Origin data: {(boxes, scores, classes)}")
+    # print(f"My data: {(filtered_boxes, filtered_scores, filtered_classes)}")
     return np.concatenate(filtered_boxes), np.concatenate(filtered_scores), np.concatenate(filtered_classes)
 
 
@@ -229,20 +234,22 @@ yolov3 = KSNN('VIM3')
 print(' |---+ KSNN Version: {} +---| '.format(yolov3.get_nn_version()))
 
 print('Start init neural network ...')
-yolov3.nn_init(library='/home/khadas/catkin/src/EngineeringAndCreationProject2025/scripts/libnn_new_eac.so', model='/home/khadas/catkin/src/EngineeringAndCreationProject2025/scripts/new_eac.nb', level=0)
+yolov3.nn_init(library='/home/khadas/catkin/src/EngineeringAndCreationProject2025/scripts/libnn_new_eac.so',
+               model='/home/khadas/catkin/src/EngineeringAndCreationProject2025/scripts/new_eac.nb', level=0)
 print('Done.')
 
 if __name__ == "__main__":
     print('Get input data ...')
     cap = cv.VideoCapture(0)
     while 1:
-        #orig_img = cv.imread('./test.jpg', cv.IMREAD_COLOR)
+        # orig_img = cv.imread('./test.jpg', cv.IMREAD_COLOR)
         _, output_img = cap.read()
         boxes, scores, classes = inference(output_img, True)
         if boxes is not None:
             draw(output_img, boxes, scores, classes)
         cv.imshow("results", output_img)
         if cv.waitKey(1) & 0xFF == ord('q'):
-           break
+            break
     cap.release()
-    cv.destroyAllWindows() 
+    cv.destroyAllWindows()
+
