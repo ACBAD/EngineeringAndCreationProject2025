@@ -48,6 +48,9 @@ int main(int argc, char* argv[]) {
 
   static ros::NodeHandle node_handle;
   static actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> local_ac("move_base", true);
+  
+  ROS_WARN("side_color state is %d", ros::param::has("side_color"));
+  
   std::string param_str;
   if(!ros::param::get("/navigation_node/side_color", param_str)) {
     ROS_ERROR("side_color not define, fatal error");
