@@ -11,7 +11,7 @@ int main(int argc, char* argv[]) {
     std::cin>>sleep_time;
     ROS_INFO("Sleep for %lf", sleep_time);
     geometry_msgs::Twist go_msg;
-    go_msg.linear.x = 0.3;
+    go_msg.linear.x = 0.7;
     twist_pub.publish(go_msg);
     ROS_INFO("GO");
     // ReSharper disable once CppExpressionWithoutSideEffects
