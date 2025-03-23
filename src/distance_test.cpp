@@ -9,6 +9,10 @@ int main(int argc, char* argv[]) {
     double sleep_time;
     ROS_INFO("Input sleep");
     std::cin>>sleep_time;
+    if (sleep_time == 0) {
+      ROS_INFO("DONE");
+      break;
+    }
     ROS_INFO("Sleep for %lf", sleep_time);
     geometry_msgs::Twist go_msg;
     go_msg.linear.x = 0.7;
