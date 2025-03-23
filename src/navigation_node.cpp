@@ -51,7 +51,7 @@ int main(int argc, char* argv[]) {
   global_nh = &node_handle;
   ac = &local_ac;
   std::string param_str;
-  if(!ros::param::get("side_color", param_str)) {
+  if(!ros::param::get("/navigation_node/side_color", param_str)) {
     ROS_ERROR("side_color not define, fatal error");
     return 1;
   }
