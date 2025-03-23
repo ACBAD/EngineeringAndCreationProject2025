@@ -47,7 +47,7 @@ TebLocalPlannerROS:
  inflation_dist: 0.5     # 障碍物膨胀距离
  include_costmap_obstacles: True          # 是否检测动态障碍物
  costmap_obstacles_behind_robot_dist: 1.0 # 身后多远距离内障碍物加入检测范围
- obstacle_poses_affected: 25              # 障碍物对附近多少个关键点产生影响
+ obstacle_poses_affected: 15              # 障碍物对附近多少个关键点产生影响
  costmap_converter_plugin: ""             # costmap_converter 插件名称，这里不使用
 
  # 路径优化相关
@@ -70,5 +70,5 @@ TebLocalPlannerROS:
  selection_cost_hysteresis: 1.0       # 路径轨迹入选的评价上限
  selection_obst_cost_scale: 1.0       # 障碍物评价在入选标准中的缩放倍率
  selection_alternative_time_cost: False # 时间成本是否要进行平方计算
- roadmap_graph_no_samples: 15         # 为创建 roadmap graph 而生成的样本数
+ roadmap_graph_no_samples: 10         # 为创建 roadmap graph 而生成的样本数
  roadmap_graph_area_width: 5          # 关键点采样的宽度，单位为米。
