@@ -6,11 +6,13 @@ int main(int argc, char* argv[]) {
   ros::NodeHandle node_handle;
   const ros::Publisher twist_pub = node_handle.advertise<geometry_msgs::Twist>("/cmd_vel", 2);
   while (ros::ok()) {
+    double end_vel, last_time, time_step, stand_by_vel;
+    ROS_INFO("Input stand by vel");
+    std::cin>>stand_by_vel;
     geometry_msgs::Twist go_msg;
-    go_msg.linear.x = 0.1;
+    go_msg.linear.x = stand_by_vel;
     twist_pub.publish(go_msg);
-    ROS_INFO("Stand by in 0.1");
-    double end_vel, last_time, time_step;
+    ROS_INFO("Stand by in %lf", stand_by_vel);
     ROS_INFO("Input end vel");
     std::cin>>end_vel;
     if (end_vel == 0) {
@@ -24,7 +26,7 @@ int main(int argc, char* argv[]) {
     ROS_INFO("Input last time");
     std::cin>>last_time;
     ROS_INFO("START GO");
-    for (double i = 0; i < end_vel ;i += 0.01) {
+    for (double i = stand_by_vel; i < end_vel ;i += 0.01) {
       go_msg.linear.x = i;
       twist_pub.publish(go_msg);
       // ReSharper disable once CppExpressionWithoutSideEffects
