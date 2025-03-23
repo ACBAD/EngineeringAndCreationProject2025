@@ -165,6 +165,7 @@ add_executable(visual_node src/visual_node.cpp)
 add_executable(schema2_node src/schema2_node.cpp)
 add_executable(navigation_node src/navigation_node.cpp)
 add_executable(camera_node src/camera_node.cpp)
+add_executable(distance_test src/distance_test.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -181,6 +182,7 @@ add_executable(camera_node src/camera_node.cpp)
 target_link_libraries(camera_node ${catkin_LIBRARIES})
 target_include_directories(stm32_node PRIVATE include)
 target_link_libraries(stm32_node ${catkin_LIBRARIES})
+target_link_libraries(distance_test ${catkin_LIBRARIES})
 target_link_libraries(visual_node ${catkin_LIBRARIES})
 add_dependencies(visual_node eac_pkg_generate_messages_cpp)
 target_link_libraries(main_node ${catkin_LIBRARIES})
