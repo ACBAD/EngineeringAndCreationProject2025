@@ -50,10 +50,16 @@ int main(int argc, char* argv[]) {
   static actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> local_ac("move_base", true);
   global_nh = &node_handle;
   ac = &local_ac;
-
-  if(!ros::param::get("side_color", side_color)) {
+  std::string param_str;
+  if(!ros::param::get("side_color", param_str)) {
     ROS_ERROR("side_color not define, fatal error");
     return 1;
+  }
+  try {
+    side_color = std::stoi(param_str);
+  }catch (const std::invalid_argument& e) {
+    ROS_ERROR("side_color is 0 or 1");
+    return 2;
   }
   if(side_color == SIDE_RED)poses.init_red();
   else if(side_color == SIDE_BLUE)poses.init_blue();
