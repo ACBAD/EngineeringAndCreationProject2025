@@ -58,20 +58,23 @@ int main(int argc, char* argv[]) {
   ac = &local_ac;
 
   ROS_WARN("First init ok");
-
+  const ros::Publisher twist_pub = node_handle.advertise<geometry_msgs::Twist>("/cmd_vel", 2);
+  const ros::Publisher initialpose_pub = node_handle.advertise<geometry_msgs::PoseWithCovarianceStamped>("/initialpose", 2);
+  // ReSharper disable once CppExpressionWithoutSideEffects
+  ros::Duration(1.0).sleep();
   geometry_msgs::PoseWithCovarianceStamped init_start_pose;
   init_start_pose.header.frame_id = "map";
   init_start_pose.header.stamp = ros::Time::now();
   init_start_pose.pose.covariance = {};
   init_start_pose.pose.pose = poses.poses[START_POSE];
   // 设定初始位置
-  const ros::Publisher initialpose_pub = node_handle.advertise<geometry_msgs::PoseWithCovarianceStamped>("/initialpose", 2);
+
   initialpose_pub.publish(init_start_pose);
   ROS_INFO("initialpose sent, rolling for amcl");
   geometry_msgs::Twist init_rolling_twist{};
   // 高速旋转初始化amcl
   init_rolling_twist.angular.z = 0.3;
-  const ros::Publisher twist_pub = node_handle.advertise<geometry_msgs::Twist>("/cmd_vel", 2);
+
   twist_pub.publish(init_rolling_twist);
   // ReSharper disable once CppExpressionWithoutSideEffects
   ros::Duration(5.0).sleep();
