@@ -76,6 +76,8 @@ int main(int argc, char* argv[]) {
   twist_pub.publish(init_rolling_twist);
   // ReSharper disable once CppExpressionWithoutSideEffects
   ros::Duration(5.0).sleep();
+  init_rolling_twist.angular.z = 0;
+  twist_pub.publish(init_rolling_twist);
   while(!local_ac.waitForServer(ros::Duration(5.0))){
     ROS_INFO("Waiting for the move_base action server to come up");
   }
