@@ -10,40 +10,38 @@ typedef actionlib::SimpleClientGoalState goal_state;
 int side_color = -1;
 UserSetPose poses;
 
-// actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> *ac;
-// ros::NodeHandle* global_nh = nullptr;
-//
-//
-// actionlib::SimpleClientGoalState gotoGoal(const move_base_msgs::MoveBaseGoal& goal, const uint8_t timeout=0) {
-//   ac->sendGoal(goal);
-//   ROS_INFO("ac goal sent");
-//   bool timeout_reach = false;
-//   if (timeout) {
-//     auto timeoutReachCallback = [&timeout_reach](ros::TimerEvent event) {timeout_reach = true;};
-//     ros::Timer navi_timer = global_nh->createTimer(ros::Duration(timeout), timeoutReachCallback);
-//   }
-//   while (ac->getState() != goal_state::SUCCEEDED ||
-//     ac->getState() != goal_state::PENDING ||
-//     !timeout_reach){ros::spinOnce();}
-//   if(timeout_reach)ac->cancelGoal();
-//   return ac->getState();
-// }
-//
-// bool naviServiceCallback(eac_pkg::EacGoal::Request& request, eac_pkg::EacGoal::Response& response) {
-//   ROS_INFO("request");
-//   move_base_msgs::MoveBaseGoal goal;
-//   goal.target_pose.header.frame_id = "map";
-//   goal.target_pose.header.stamp = ros::Time::now();
-//   if(request.goal_index == 0) {
-//     ROS_INFO("custom pose");
-//     goal.target_pose.pose = request.custom_goal;
-//   }else goal.target_pose.pose = poses.poses[request.goal_index];
-//   response.state = true;
-//   goal_state goal_result = gotoGoal(goal, request.timeout);
-//   if(goal_result != goal_state::SUCCEEDED)response.state = false;
-//   response.extra_msg = static_cast<uint>(goal_result.state_);
-//   return true;
-// }
+actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> *ac;
+
+
+bool naviServiceCallback(eac_pkg::EacGoal::Request& request, eac_pkg::EacGoal::Response& response) {
+  ROS_INFO("request");
+  move_base_msgs::MoveBaseGoal goal;
+  goal.target_pose.header.frame_id = "map";
+  goal.target_pose.header.stamp = ros::Time::now();
+  if(request.goal_index == 0) {
+    ROS_INFO("custom pose");
+    goal.target_pose.pose = request.custom_goal;
+  }else goal.target_pose.pose = poses.poses[request.goal_index];
+  response.state = true;
+
+  ac->sendGoal(goal);
+  ROS_INFO("ac goal sent");
+  bool timeout_reach = false;
+  if (request.timeout) {
+    ros::NodeHandle node_handle;
+    auto timeoutReachCallback = [&timeout_reach](ros::TimerEvent event) {timeout_reach = true;};
+    ros::Timer navi_timer = node_handle.createTimer(ros::Duration(request.timeout), timeoutReachCallback);
+  }
+  while (ac->getState() != goal_state::SUCCEEDED ||
+    ac->getState() != goal_state::PENDING ||
+    !timeout_reach){ros::spinOnce();}
+  if(timeout_reach)ac->cancelGoal();
+
+  const goal_state goal_result = ac->getState();
+  if(goal_result != goal_state::SUCCEEDED)response.state = false;
+  response.extra_msg = static_cast<uint>(goal_result.state_);
+  return true;
+}
 
 int main(int argc, char* argv[]) {
   ros::init(argc, argv, "navigation_node");
@@ -57,8 +55,7 @@ int main(int argc, char* argv[]) {
   if(side_color == SIDE_RED)poses.init_red();
   else if(side_color == SIDE_BLUE)poses.init_blue();
   else return 2;
-  // global_nh = &node_handle;
-  // ac = &local_ac;
+  ac = &local_ac;
 
   ROS_WARN("First init ok");
 
@@ -85,7 +82,7 @@ int main(int argc, char* argv[]) {
   }
   ROS_INFO("navigation server online");
 
-  // ros::ServiceServer navi_server = node_handle.advertiseService("navigation", naviServiceCallback);
+  ros::ServiceServer navi_server = node_handle.advertiseService("navigation", naviServiceCallback);
   ros::spin();
   return 0;
 }
