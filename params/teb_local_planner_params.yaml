@@ -10,9 +10,9 @@ TebLocalPlannerROS:
  feasibility_check_no_poses: 2           #在判断生成的轨迹是否冲突时使用，此时设置为2，即从轨迹起点开始逐个检查轨迹上的2个点，若2个点均不发生碰撞，则认为本次轨迹有效。
     
  # 运动相关     
- max_vel_x: 0.2           # 最大速度
+ max_vel_x: 0.1           # 最大速度
  max_vel_x_backwards: 0.2 # 最大倒车速度，设置为0或者负数将导致错误。减少倒车应该修改倒车权重，不改这里。
- max_vel_theta: 0.3       # 最大转向角速度，跟 min_turning_radius 相关 (r = v / omega)
+ max_vel_theta: 0.1       # 最大转向角速度，跟 min_turning_radius 相关 (r = v / omega)
  acc_lim_x: 0.3           # 最大线加速度
  acc_lim_theta: 0.5       # 最大角加速度
 
@@ -53,7 +53,7 @@ TebLocalPlannerROS:
  # 路径优化相关
  no_inner_iterations: 3     # 图优化optimizer的迭代次数
  no_outer_iterations: 3     # 外循环迭代次数
- penalty_epsilon: 0.1       # 为所有的惩罚项增加一个小的安全余量
+ penalty_epsilon: 0.01       # 为所有的惩罚项增加一个小的安全余量
  weight_max_vel_x: 2        # 平移速度的优化权重
  weight_max_vel_theta: 1    # 角速度的优化权重
  weight_acc_lim_x: 1        # 平移加速度的优化权重
