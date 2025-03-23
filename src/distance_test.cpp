@@ -6,6 +6,10 @@ int main(int argc, char* argv[]) {
   ros::NodeHandle node_handle;
   const ros::Publisher twist_pub = node_handle.advertise<geometry_msgs::Twist>("/cmd_vel", 2);
   while (ros::ok()) {
+    geometry_msgs::Twist go_msg;
+    go_msg.linear.x = 0.1;
+    twist_pub.publish(go_msg);
+    ROS_INFO("Stand by in 0.1");
     double end_vel, last_time, time_step;
     ROS_INFO("Input end vel");
     std::cin>>end_vel;
@@ -20,7 +24,6 @@ int main(int argc, char* argv[]) {
     ROS_INFO("Input last time");
     std::cin>>last_time;
     ROS_INFO("START GO");
-    geometry_msgs::Twist go_msg;
     for (double i = 0; i < end_vel ;i += 0.01) {
       go_msg.linear.x = i;
       twist_pub.publish(go_msg);
