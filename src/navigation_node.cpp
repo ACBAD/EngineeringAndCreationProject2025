@@ -48,10 +48,6 @@ int main(int argc, char* argv[]) {
 
   static ros::NodeHandle node_handle;
   static actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> local_ac("move_base", true);
-  
-  ROS_WARN("side_color state is %d", ros::param::has("side_color"));
-  ROS_WARN("test_param state is %d", ros::param::has("/navigation_node/test_param"));
-  ROS_WARN("rosdistro state is %d", ros::param::has("rosdistro"));
   if(!ros::param::get("side_color", side_color)) {
     ROS_ERROR("side_color not define, fatal error");
     return 1;
@@ -61,6 +57,8 @@ int main(int argc, char* argv[]) {
   else return 2;
   global_nh = &node_handle;
   ac = &local_ac;
+
+  ROS_WARN("First init ok");
 
   geometry_msgs::PoseWithCovarianceStamped init_start_pose;
   init_start_pose.header.frame_id = "map";
