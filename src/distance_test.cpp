@@ -30,7 +30,8 @@ int main(int argc, char* argv[]) {
       go_msg.linear.x = i;
       twist_pub.publish(go_msg);
       // ReSharper disable once CppExpressionWithoutSideEffects
-      ros::Duration(time_step).sleep();
+      if(time_step > 0)
+        ros::Duration(time_step).sleep();
     }
 
     if (last_time > 0) {
