@@ -9,7 +9,4 @@
     </node>
     <include file="$(find eac_pkg)/launch/amcl_diff.launch"/>
     <include file="$(find eac_pkg)/launch/move_base.launch"/>
-    <node pkg="eac_pkg" type="navigation_node" name="" output="screen">
-        <param name="side_color" value="0"/>
-    </node>
 </launch>
