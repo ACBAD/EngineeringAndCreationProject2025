@@ -8,29 +8,32 @@ l_data = []
 r_data = []
 freeze_count = 0
 non_zero = False
+defualt_l_data = None
+defualt_r_data = None
 
 def l_callback(msg: Int32):
-    global non_zero, freeze_count
-    if msg.data:
-        if non_zero is False:
-            rospy.loginfo("non zero")
-            non_zero = True
+    global non_zero, freeze_count, defualt_l_data
+    if defualt_l_data is None:
+        defualt_l_data = msg.data
+        return
+    if msg.data != defualt_l_data:
+        non_zero = True
     if non_zero:
         if l_data and l_data[-1] == msg.data:
             freeze_count += 1
         l_data.append(msg.data)
 
 def r_callback(msg: Int32):
-    global non_zero, freeze_count
-    if msg.data:
-        if non_zero is False:
-            rospy.loginfo("non zero")
-            non_zero = True
+    global non_zero, freeze_count, defualt_r_data
+    if defualt_r_data is None:
+        defualt_r_data = msg.data
+        return
+    if defualt_r_data != msg.data:
+        non_zero = True
     if non_zero:
         if r_data and r_data[-1] == msg.data:
             freeze_count += 1
         r_data.append(msg.data)
-
 
 
 if __name__ == "__main__":
@@ -45,4 +48,3 @@ if __name__ == "__main__":
             with open("wheel_ticks.json", 'w') as f:
                 json.dump({'l_data': l_data, 'r_data': r_data}, f)
             break
-    import show_data
