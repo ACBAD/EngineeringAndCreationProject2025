@@ -9,7 +9,8 @@ list_b = data['r_data']
 
 if len(list_a) != len(list_b):
     smaller_list = list_a if len(list_a) < len(list_b) else list_b
-    smaller_list.append(smaller_list[-1])
+    while len(list_a) != len(list_b):
+        smaller_list.append(smaller_list[-1])
 
 # 生成下标作为x轴数据
 x_values = range(len(list_a))
