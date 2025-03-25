@@ -16,7 +16,7 @@ ros::Publisher rw_pub;
 ros::Publisher lw_pub;
 ros::Publisher cover_pub;
 geometry_msgs::Twist global_twist;
-uint8_t cover_cmd;
+uint8_t cover_cmd = 195;
 int32_t total_right = 0;
 int32_t total_left = 0;
 
