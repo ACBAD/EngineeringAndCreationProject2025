@@ -58,10 +58,14 @@ int main(int argc, char* argv[]) {
   const ros::Publisher twist_pub = node_handle.advertise<geometry_msgs::Twist>("/cmd_vel", 2);
 
   // 重置罩子状态
+  cover_angle.data = 5;
+  cover_pub.publish(cover_angle);
+  // ReSharper disable once CppExpressionWithoutSideEffects
+  ros::Duration(3).sleep();
   cover_angle.data = 195;
   cover_pub.publish(cover_angle);
   // ReSharper disable once CppExpressionWithoutSideEffects
-  ros::Duration(1).sleep();
+  ros::Duration(3).sleep();
   ROS_INFO("init ok");
   // 等待发出开始指令
   std::cout<<"waiting for start signal";
