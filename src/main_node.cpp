@@ -69,8 +69,10 @@ int main(int argc, char* argv[]) {
   ROS_INFO("init ok");
   // 等待发出开始指令
   std::cout<<"waiting for start signal";
-  std::cin.get();
-
+  if(const char sig = std::cin.get(); sig == '0') {
+    ROS_WARN("user out");
+    return 1;
+  }
   ROS_INFO("ATTACK!");
 
   cover_angle.data = 50;
