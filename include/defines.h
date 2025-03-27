@@ -29,20 +29,20 @@ public:
   UserSetPose(){}
   void init_red() {
     chosen_color = SIDE_RED;
-    poses[START_POSE].position.x = 0.02624654769897461;
-    poses[START_POSE].position.y = -0.8079619407653809;
-    poses[START_POSE].orientation.z = 0.010020251335068935;
-    poses[START_POSE].orientation.w = 0.9999497960213712;
+    poses[START_POSE].position.x = 1.0029610395431519;
+    poses[START_POSE].position.y = -1.88040030002594;
+    poses[START_POSE].orientation.z = 0.7074565710566375;
+    poses[START_POSE].orientation.w = 0.7067568181975925;
 
     poses[PICK_POSE].position.x = 3.0;
     poses[PICK_POSE].position.y = 1.5;
     poses[PICK_POSE].orientation.z = 0.0;
     poses[PICK_POSE].orientation.w = 1.0;
 
-    poses[SECURITY_ZONE].position.x = 0.0;
-    poses[SECURITY_ZONE].position.y = 0.0;
-    poses[SECURITY_ZONE].orientation.z = 0.0;
-    poses[SECURITY_ZONE].orientation.w = 1.0;
+    poses[SECURITY_ZONE].position.x = 1.9216506481170654;
+    poses[SECURITY_ZONE].position.y = -0.8075991868972778;
+    poses[SECURITY_ZONE].orientation.z = -0.00340097626687764;
+    poses[SECURITY_ZONE].orientation.w = 0.9999942166634925;
   }
   void init_blue() {
     chosen_color = SIDE_BLUE;
@@ -56,10 +56,10 @@ public:
     poses[PICK_POSE].orientation.z = 0.0;
     poses[PICK_POSE].orientation.w = 1.0;
 
-    poses[SECURITY_ZONE].position.x = 0.0;
-    poses[SECURITY_ZONE].position.y = 0.0;
-    poses[SECURITY_ZONE].orientation.z = 0.0;
-    poses[SECURITY_ZONE].orientation.w = 1.0;
+    poses[SECURITY_ZONE].position.x = -0.09043943881988525;
+    poses[SECURITY_ZONE].position.y = -0.77778160572052;
+    poses[SECURITY_ZONE].orientation.z = -0.9999017358670853;
+    poses[SECURITY_ZONE].orientation.w = 0.014018509549504503;
   }
 };
 

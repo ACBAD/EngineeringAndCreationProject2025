@@ -7,14 +7,10 @@
 #include <iostream>
 #include <defines.h>
 #include <eac_pkg/EacGoal.h>
-#include <eac_pkg/ObjectInfoArray.h>
 
 typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
 int side_color = 0;
 bool cover_state = true;
-eac_pkg::ObjectInfoArray object_infos;
-
-void updateObjectsInfos(const eac_pkg::ObjectInfoArray& msg) {object_infos = msg;}
 
 void updateCoverState(const std_msgs::UInt8& msg) {
   if(msg.data)cover_state = true;
@@ -48,6 +44,7 @@ int gotoGoal(ros::ServiceClient& navi_client,
 int main(int argc, char* argv[]) {
   ros::init(argc, argv, "main_node");
   ros::NodeHandle node_handle;
+  std_msgs::UInt8 cover_angle;
   // 此处开始为抽签完成后的调试阶段
   ROS_INFO("main start");
   if(!ros::param::get("side_color", side_color)) {
@@ -57,8 +54,14 @@ int main(int argc, char* argv[]) {
 
   const ros::Publisher cover_pub = node_handle.advertise<std_msgs::UInt8>("/cover_cmd", 2);
   const ros::Publisher schema2_pub = node_handle.advertise<std_msgs::UInt8>("/schema2_node", 2);
-  ros::Subscriber object_info_sub = node_handle.subscribe("/objects_data", 2, updateObjectsInfos);
   ros::ServiceClient navi_client = node_handle.serviceClient<eac_pkg::EacGoal>("navigation");
+  const ros::Publisher twist_pub = node_handle.advertise<geometry_msgs::Twist>("/cmd_vel", 2);
+
+  // 重置罩子状态
+  cover_angle.data = 195;
+  cover_pub.publish(cover_angle);
+  // ReSharper disable once CppExpressionWithoutSideEffects
+  ros::Duration(1).sleep();
 
   // 前往设定起点（应该动作幅度不大）
   if(gotoGoal(navi_client, START_POSE) != 0) {
@@ -71,19 +74,26 @@ int main(int argc, char* argv[]) {
   std::cin.get();
 
   ROS_INFO("ATTACK!");
-  std_msgs::UInt8 cover_angle;
-  cover_angle.data = 30;
+
+  cover_angle.data = 50;
   // 先让罩子开始转
   cover_pub.publish(cover_angle);
   ROS_INFO("rolling cover!");
 
-  // 同时前往球区前方，如果没过去就判定为失败进入方案2
-  if(gotoGoal(navi_client, PICK_POSE) != 0) {
-    ROS_WARN("schema 1 FAILED! try schema 2");
-    schema2(schema2_pub);
-    return 0;
+  geometry_msgs::Twist go_msg;
+  for (double i = 0; i < 0.7 ;i += 0.01) {
+    go_msg.linear.x = i;
+    twist_pub.publish(go_msg);
+    // ReSharper disable once CppExpressionWithoutSideEffects
+    ros::Duration(0.01).sleep();
   }
-  ROS_INFO("reach target location, waiting cover ready");
+  go_msg.linear.x = 0.7;
+  twist_pub.publish(go_msg);
+  // ReSharper disable once CppExpressionWithoutSideEffects
+  ros::Duration(0.85).sleep();
+  go_msg.linear.x = 0;
+  twist_pub.publish(go_msg);
+
   cover_state = false;
   ros::Subscriber cover_sub = node_handle.subscribe("/cover_state", 2, updateCoverState);
   // 等待罩子就位
@@ -105,30 +115,7 @@ int main(int argc, char* argv[]) {
     schema2(schema2_pub);
     return 0;
   }
-  ROS_INFO("reach security zone, check balls state");
-
-  // 在安全区前检查球是否正常，不正常就转方案2
-  while (!checkInfoAviliable(object_infos.stamp)){ros::spinOnce();}
-  const bool has_red = std::any_of(object_infos.data.begin(), object_infos.data.end(),
-                                     [](const eac_pkg::ObjectInfo& n) {
-                                       return n.color == OBJ_RED && n.distance < DISTANCE_TOLERANCE_LIMIT ;
-                                     });
-  const bool has_blue = std::any_of(object_infos.data.begin(), object_infos.data.end(),
-                                    [](const eac_pkg::ObjectInfo& n) {
-                                      return n.color == OBJ_BLUE && n.distance < DISTANCE_TOLERANCE_LIMIT;
-                                    });
-  if((side_color == SIDE_RED && has_blue) || (side_color == SIDE_BLUE && has_red)) {
-    ROS_ERROR("wrong object state, use schema 2");
-    cover_state = false;
-    cover_angle.data = 195;
-    // 抬起罩子
-    cover_pub.publish(cover_angle);
-    // spinOnce can call updateCoverState
-    // ReSharper disable once CppDFALoopConditionNotUpdated
-    while (!cover_state) {ros::spinOnce();}
-    schema2(schema2_pub);
-    return 0;
-  }
+  ROS_INFO("reach security zone");
 
   cover_state = false;
   cover_angle.data = 195;
@@ -138,7 +125,6 @@ int main(int argc, char* argv[]) {
   // ReSharper disable once CppDFALoopConditionNotUpdated
   while (!cover_state) {ros::spinOnce();}
   // 赢
-  ROS_WARN("WIN");
-  ros::spin();
+  schema2(schema2_pub);
   return 0;
 }

@@ -5,41 +5,52 @@
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <geometry_msgs/Twist.h>
 #include <actionlib/client/simple_action_client.h>
+#include <std_msgs/UInt8.h>
 
 typedef actionlib::SimpleClientGoalState goal_state;
 int side_color = -1;
 UserSetPose poses;
-
 actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> *ac;
 
 
 bool naviServiceCallback(eac_pkg::EacGoal::Request& request, eac_pkg::EacGoal::Response& response) {
-  ROS_INFO("request");
+  ROS_INFO("Received navigation request with goal index: %d", request.goal_index);
+  // 初始化目标
   move_base_msgs::MoveBaseGoal goal;
   goal.target_pose.header.frame_id = "map";
   goal.target_pose.header.stamp = ros::Time::now();
+  // 选择目标位姿
   if(request.goal_index == 0) {
     ROS_INFO("custom pose");
     goal.target_pose.pose = request.custom_goal;
   }else goal.target_pose.pose = poses.poses[request.goal_index];
   response.state = true;
-
+  // 发送目标
   ac->sendGoal(goal);
-  ROS_INFO("ac goal sent");
+  ROS_INFO("Goal sent to move_base");
+  // 超时与状态监控
   bool timeout_reach = false;
-  if (request.timeout) {
-    ros::NodeHandle node_handle;
-    auto timeoutReachCallback = [&timeout_reach](ros::TimerEvent event) {timeout_reach = true;};
-    ros::Timer navi_timer = node_handle.createTimer(ros::Duration(request.timeout), timeoutReachCallback);
+  const ros::Time start_time = ros::Time::now();
+  while (ros::ok() && !timeout_reach && !ac->getState().isDone()) {
+    ros::spinOnce();
+    // 主动检查超时
+    if (request.timeout > 0 && (ros::Time::now() - start_time).toSec() >= request.timeout) {
+      timeout_reach = true;
+      ROS_WARN("Navigation timeout reached");
+    }
+    // ReSharper disable once CppExpressionWithoutSideEffects
+    ros::Duration(0.1).sleep();
   }
-  while (ac->getState() != goal_state::SUCCEEDED ||
-    ac->getState() != goal_state::PENDING ||
-    !timeout_reach){ros::spinOnce();}
-  if(timeout_reach)ac->cancelGoal();
-
-  const goal_state goal_result = ac->getState();
-  if(goal_result != goal_state::SUCCEEDED)response.state = false;
-  response.extra_msg = static_cast<uint>(goal_result.state_);
+  // 处理超时取消
+  if (timeout_reach) {
+    ac->cancelGoal();
+    ROS_INFO("Goal cancelled due to timeout");
+  }
+  // 设置响应
+  const auto state = ac->getState();
+  response.state = (state == actionlib::SimpleClientGoalState::SUCCEEDED);
+  response.extra_msg = static_cast<uint>(state.state_);
+  ROS_INFO("Navigation finished with state: %s", state.toString().c_str());
   return true;
 }
 
@@ -70,16 +81,16 @@ int main(int argc, char* argv[]) {
   // 设定初始位置
 
   initialpose_pub.publish(init_start_pose);
-  ROS_INFO("initialpose sent, rolling for amcl");
-  geometry_msgs::Twist init_rolling_twist{};
-  // 高速旋转初始化amcl
-  init_rolling_twist.angular.z = 0.3;
-
-  twist_pub.publish(init_rolling_twist);
   // ReSharper disable once CppExpressionWithoutSideEffects
-  ros::Duration(5.0).sleep();
-  init_rolling_twist.angular.z = 0;
-  twist_pub.publish(init_rolling_twist);
+  ros::Duration(3.0).sleep();
+  initialpose_pub.publish(init_start_pose);
+  // ReSharper disable once CppExpressionWithoutSideEffects
+  ros::Duration(3.0).sleep();
+  initialpose_pub.publish(init_start_pose);
+  // ReSharper disable once CppExpressionWithoutSideEffects
+  ros::Duration(3.0).sleep();
+  ROS_INFO("initialpose sent, rolling for amcl");
+  // ReSharper disable once CppExpressionWithoutSideEffects
   while(!local_ac.waitForServer(ros::Duration(5.0))){
     ROS_INFO("Waiting for the move_base action server to come up");
   }
