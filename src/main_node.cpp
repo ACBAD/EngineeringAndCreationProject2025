@@ -90,7 +90,7 @@ int main(int argc, char* argv[]) {
   go_msg.linear.x = 0.7;
   twist_pub.publish(go_msg);
   // ReSharper disable once CppExpressionWithoutSideEffects
-  ros::Duration(0.85).sleep();
+  ros::Duration(0.8).sleep();
   go_msg.linear.x = 0;
   twist_pub.publish(go_msg);
 
