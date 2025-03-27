@@ -76,7 +76,7 @@ int main(int argc, char* argv[]) {
   geometry_msgs::PoseWithCovarianceStamped init_start_pose;
   init_start_pose.header.frame_id = "map";
   init_start_pose.header.stamp = ros::Time::now();
-  init_start_pose.pose.covariance = {};
+  init_start_pose.pose.covariance = {0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.06853892326654787};
   init_start_pose.pose.pose = poses.poses[START_POSE];
   // 设定初始位置
 
