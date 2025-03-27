@@ -62,12 +62,6 @@ int main(int argc, char* argv[]) {
   cover_pub.publish(cover_angle);
   // ReSharper disable once CppExpressionWithoutSideEffects
   ros::Duration(1).sleep();
-
-  // 前往设定起点（应该动作幅度不大）
-  if(gotoGoal(navi_client, START_POSE) != 0) {
-    ROS_ERROR("init failed, rerun");
-    return 1;
-  }
   ROS_INFO("init ok");
   // 等待发出开始指令
   std::cout<<"waiting for start signal";
