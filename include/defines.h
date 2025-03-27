@@ -29,20 +29,20 @@ public:
   UserSetPose(){}
   void init_red() {
     chosen_color = SIDE_RED;
-    poses[START_POSE].position.x = 1.0029610395431519;
-    poses[START_POSE].position.y = -1.88040030002594;
-    poses[START_POSE].orientation.z = 0.7074565710566375;
-    poses[START_POSE].orientation.w = 0.7067568181975925;
+    poses[START_POSE].position.x = 0.958954930305481;
+    poses[START_POSE].position.y = 0.16402876377105713;
+    poses[START_POSE].orientation.z = -0.7078348873904304;
+    poses[START_POSE].orientation.w = 0.7063779244802153;
 
     poses[PICK_POSE].position.x = 3.0;
     poses[PICK_POSE].position.y = 1.5;
     poses[PICK_POSE].orientation.z = 0.0;
     poses[PICK_POSE].orientation.w = 1.0;
 
-    poses[SECURITY_ZONE].position.x = 1.9216506481170654;
-    poses[SECURITY_ZONE].position.y = -0.8075991868972778;
-    poses[SECURITY_ZONE].orientation.z = -0.00340097626687764;
-    poses[SECURITY_ZONE].orientation.w = 0.9999942166634925;
+    poses[SECURITY_ZONE].position.x = -0.02042520046234131;
+    poses[SECURITY_ZONE].position.y = -0.7943828105926514;
+    poses[SECURITY_ZONE].orientation.z = 0.9999943086827945;
+    poses[SECURITY_ZONE].orientation.w = 0.0033738112009850593;
   }
   void init_blue() {
     chosen_color = SIDE_BLUE;
