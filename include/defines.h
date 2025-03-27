@@ -29,10 +29,10 @@ public:
   UserSetPose(){}
   void init_red() {
     chosen_color = SIDE_RED;
-    poses[START_POSE].position.x = 0.958954930305481;
-    poses[START_POSE].position.y = 0.16402876377105713;
-    poses[START_POSE].orientation.z = -0.7078348873904304;
-    poses[START_POSE].orientation.w = 0.7063779244802153;
+    poses[START_POSE].position.x = 0.9126139879226685;
+    poses[START_POSE].position.y = 0.14473581314086914;
+    poses[START_POSE].orientation.z = -0.7088159706112025;
+    poses[START_POSE].orientation.w = 0.7053934503569613;
 
     poses[PICK_POSE].position.x = 3.0;
     poses[PICK_POSE].position.y = 1.5;

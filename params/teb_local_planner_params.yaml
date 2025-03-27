@@ -8,13 +8,13 @@ TebLocalPlannerROS:
  global_plan_overwrite_orientation: False # 是否修正全局路径中的临时局部路径点的朝向
  max_global_plan_lookahead_dist: 1.5     # 最大向前看距离
  feasibility_check_no_poses: 2           #在判断生成的轨迹是否冲突时使用，此时设置为2，即从轨迹起点开始逐个检查轨迹上的2个点，若2个点均不发生碰撞，则认为本次轨迹有效。
- min_vel_x: 0.06   # 根据电机死区调整（建议略高于死区速度）
- min_vel_theta: 0.05
+ min_vel_x: 0.1   # 根据电机死区调整（建议略高于死区速度）
+ min_vel_theta: 0.1
     
  # 运动相关     
  max_vel_x: 0.2           # 最大速度
  max_vel_x_backwards: 0.2 # 最大倒车速度，设置为0或者负数将导致错误。减少倒车应该修改倒车权重，不改这里。
- max_vel_theta: 0.1       # 最大转向角速度，跟 min_turning_radius 相关 (r = v / omega)
+ max_vel_theta: 0.2       # 最大转向角速度，跟 min_turning_radius 相关 (r = v / omega)
  acc_lim_x: 0.3           # 最大线加速度
  acc_lim_theta: 0.5       # 最大角加速度
 

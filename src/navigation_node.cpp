@@ -81,14 +81,17 @@ int main(int argc, char* argv[]) {
   // 设定初始位置
 
   initialpose_pub.publish(init_start_pose);
+  ROS_INFO("init pose 1");
+  // ReSharper disable once CppExpressionWithoutSideEffects
+  ros::Duration(3.0).sleep();
+  initialpose_pub.publish(init_start_pose);
+  ROS_INFO("init pose 2");
   // ReSharper disable once CppExpressionWithoutSideEffects
   ros::Duration(3.0).sleep();
   initialpose_pub.publish(init_start_pose);
   // ReSharper disable once CppExpressionWithoutSideEffects
   ros::Duration(3.0).sleep();
   initialpose_pub.publish(init_start_pose);
-  // ReSharper disable once CppExpressionWithoutSideEffects
-  ros::Duration(3.0).sleep();
   ROS_INFO("initialpose sent, rolling for amcl");
   // ReSharper disable once CppExpressionWithoutSideEffects
   while(!local_ac.waitForServer(ros::Duration(5.0))){
