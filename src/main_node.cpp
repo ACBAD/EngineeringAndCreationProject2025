@@ -73,6 +73,8 @@ int main(int argc, char* argv[]) {
     ROS_WARN("user out");
     return 1;
   }
+  // ReSharper disable once CppExpressionWithoutSideEffects
+  ros::Duration(3.0).sleep();
   ROS_INFO("ATTACK!");
 
   cover_angle.data = 50;
