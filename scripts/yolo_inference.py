@@ -40,7 +40,8 @@ if __name__ == "__main__":
         vr_msg.header.stamp = rospy.Time.now()
         boxes = cast(numpy.ndarray, boxes)
         if boxes is None:
-            continue
+            boxes = np.ndarray()
+            classes = np.ndarray()
         vr_msg.count.data = len(boxes)
         # Start fill locations data
         vr_msg.locations.layout.dim = [MultiArrayDimension(), MultiArrayDimension()]
