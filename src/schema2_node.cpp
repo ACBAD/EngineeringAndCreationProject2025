@@ -74,6 +74,7 @@ int main(int argc, char* argv[]) {
   ros::ServiceClient navi_client = node_handle.serviceClient<eac_pkg::EacGoal>("navigation");
   const ros::Publisher cover_pub = node_handle.advertise<std_msgs::UInt8>("/cover_cmd", 2);
   ros::Subscriber cover_sub = node_handle.subscribe("/cover_state", 2, coverStateCallback);
+  twist_pub = node_handle.advertise<geometry_msgs::Twist>("/cmd_vel", 2);
   ROS_INFO("waiting for trigger...");
   // ReSharper disable once CppDFALoopConditionNotUpdated
   while (!trigger) {
