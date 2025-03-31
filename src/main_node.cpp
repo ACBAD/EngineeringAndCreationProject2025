@@ -60,8 +60,6 @@ int main(int argc, char* argv[]) {
   // 重置罩子状态
   cover_angle.data = 5;
   cover_pub.publish(cover_angle);
-  // ReSharper disable once CppExpressionWithoutSideEffects
-  ros::Duration(3).sleep();
   cover_angle.data = 195;
   cover_pub.publish(cover_angle);
   // ReSharper disable once CppExpressionWithoutSideEffects
