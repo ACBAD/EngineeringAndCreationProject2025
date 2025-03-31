@@ -6,8 +6,7 @@
 #define STM32_DEFINES_H
 
 #define SERIAL_PORT "/dev/ttyS3"
-#define MAX_LINEAR_SPEED 1.2
-#define MAX_ANG_SPEED 1
+#define MAX_LINEAR_SPEED 10.0
 #define READ_STR_LENGTH 500
 
 #endif //STM32_DEFINES_H

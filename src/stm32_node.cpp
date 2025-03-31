@@ -17,8 +17,8 @@ ros::Publisher lw_pub;
 ros::Publisher cover_pub;
 geometry_msgs::Twist global_twist;
 uint8_t cover_cmd = 195;
-int32_t total_right = 0;
-int32_t total_left = 0;
+double total_right = 0;
+double total_left = 0;
 
 class EasyDocument{
   rapidjson::Document d;
@@ -152,8 +152,8 @@ void updateMotorAction(const geometry_msgs::Twist& msg) {global_twist = msg;}
 void updateCoverAction(const std_msgs::UInt8& msg) {cover_cmd = msg.data;}
 
 void sendAllArgs(const SerialDevice& sd) {
-  const int x = std::min(static_cast<int>(global_twist.linear.x/MAX_LINEAR_SPEED*100), 100);
-  const int r = std::min(static_cast<int>(global_twist.angular.z/MAX_ANG_SPEED*100), 100);
+  const double x = std::min(global_twist.linear.x, MAX_LINEAR_SPEED);
+  const double r = std::min(global_twist.angular.z, MAX_LINEAR_SPEED);
   rapidjson::Document cmd_obj;
   cmd_obj.SetObject();
   cmd_obj.AddMember("X", x, cmd_obj.GetAllocator());
@@ -163,16 +163,16 @@ void sendAllArgs(const SerialDevice& sd) {
   std_msgs::UInt8 cover_state;
   const EasyDocument stm32_data(std::move(sd.tread(200)));
   try {
-    total_right = stm32_data.getElementEasier<int64_t>("R");
-    total_left = stm32_data.getElementEasier<int64_t>("L");
+    total_right = stm32_data.getElementEasier<double>("R");
+    total_left = stm32_data.getElementEasier<double>("L");
     cover_state.data = stm32_data.getElementEasier<bool>("cover_state");
   }catch (std::runtime_error& e) {
     ROS_WARN("Error in parsing: %s", e.what());
     return;
   }
   std_msgs::Int32 R,L;
-  R.data = total_right;
-  L.data = total_left;
+  R.data = static_cast<int32_t>(total_right);
+  L.data = static_cast<int32_t>(total_left);
   rw_pub.publish(R);
   lw_pub.publish(L);
   cover_pub.publish(cover_state);
