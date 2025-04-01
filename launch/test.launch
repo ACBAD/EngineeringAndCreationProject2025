@@ -4,7 +4,7 @@
     <node pkg="tf2_ros" type="static_transform_publisher" args=" 0 0 0 2.97 0 0 base_link laser" name="static_transform_publisher"/>
     <node pkg="map_server" type="map_server" name="map_server" args=" /home/khadas/map.yaml"/>
     <node pkg="diff_drive" type="diff_drive_odometry" name="diff_drive_odometry">
-        <param name="ticks_per_meter" value="7800"/>
+        <param name="ticks_per_meter" value="360"/>
         <param name="wheel_separation" value="0.155"/>
     </node>
     <include file="$(find eac_pkg)/launch/amcl_diff.launch"/>
