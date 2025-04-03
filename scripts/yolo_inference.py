@@ -17,9 +17,9 @@ ANGLE_SCALE = 1.0
 last_log_time = time.time()
 ips = 0
 
-def limitValue(val, limit):
-    if val > limit:
-        return limit
+def limitValue(val: float):
+    if val > 1:
+        return 1
     elif val < 0:
         return 0
     return val
@@ -55,11 +55,15 @@ if __name__ == "__main__":
         for box, color_num in zip(boxes, classes):
             this_obj = ObjectInfo()
             x1, y1, x2, y2 = box
-            x1 = limitValue(x1, IMAGE_WIDTH)
-            x2 = limitValue(x2, IMAGE_WIDTH)
-            y1 = limitValue(y1, IMAGE_HEIGHT)
-            y2 = limitValue(y2, IMAGE_HEIGHT)
-            center_x, center_y = abs(x1 - x2), abs(y1 -y1)
+            x1 = limitValue(x1)
+            x2 = limitValue(x2)
+            y1 = limitValue(y1)
+            y2 = limitValue(y2)
+            ltx_location = IMAGE_WIDTH * x1
+            lty_location = IMAGE_HEIGHT * y1
+            rbx_location = IMAGE_WIDTH * x2
+            rby_location = IMAGE_HEIGHT * y2
+            center_x, center_y = abs(ltx_location - rbx_location), abs(lty_location - rby_location)
             angle = (IMAGE_WIDTH - center_x) * ANGLE_SCALE
             distance = (IMAGE_HEIGHT - center_y) * DISTANCE_SCALE
             this_obj.angle = angle
