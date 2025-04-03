@@ -48,8 +48,8 @@ if __name__ == "__main__":
         objs_msg.stamp = rospy.Time.now()
         cast(np.ndarray, boxes)
         if boxes is None:
-            boxes = np.ndarray()
-            classes = np.ndarray()
+            boxes = np.zeros(shape=(0, 4))
+            classes = np.zeros(shape=(0, 4))
         # Start fill locations data
         classes = cast(np.ndarray, classes)
         for box, color_num in zip(boxes, classes):
