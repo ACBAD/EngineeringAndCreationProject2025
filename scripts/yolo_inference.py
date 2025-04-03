@@ -63,9 +63,9 @@ if __name__ == "__main__":
             lty_location = IMAGE_HEIGHT * y1
             rbx_location = IMAGE_WIDTH * x2
             rby_location = IMAGE_HEIGHT * y2
-            center_x, center_y = abs(ltx_location - rbx_location), abs(lty_location - rby_location)
-            angle = (IMAGE_WIDTH - center_x) * ANGLE_SCALE
-            distance = (IMAGE_HEIGHT - center_y) * DISTANCE_SCALE
+            center_x, center_y = abs(ltx_location - rbx_location) / 2, abs(lty_location - rby_location) / 2
+            angle = (IMAGE_WIDTH / 2 - center_x) * ANGLE_SCALE
+            distance = (IMAGE_HEIGHT / 2 - center_y) * DISTANCE_SCALE
             this_obj.angle = angle
             this_obj.distance = distance
             this_obj.color = color_num
