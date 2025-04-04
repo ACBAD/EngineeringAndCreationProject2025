@@ -75,6 +75,7 @@ int main(int argc, char* argv[]) {
   const ros::Publisher cover_pub = node_handle.advertise<std_msgs::UInt8>("/cover_cmd", 2);
   ros::Subscriber cover_sub = node_handle.subscribe("/cover_state", 2, coverStateCallback);
   twist_pub = node_handle.advertise<geometry_msgs::Twist>("/cmd_vel", 2);
+  ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Debug);
   ROS_INFO("waiting for trigger...");
   // ReSharper disable once CppDFALoopConditionNotUpdated
   while (!trigger && ros::ok()) {
