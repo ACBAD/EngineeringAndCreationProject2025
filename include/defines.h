@@ -12,7 +12,7 @@ constexpr double pi = 3.14159265358979323;
 
 enum SideColor {
   SIDE_RED,
-  SIDE_BLUE
+  SIDE_BLUE = 2
 };
 
 enum PoseNames {
@@ -65,8 +65,8 @@ public:
 
 enum ObjectColor {
   OBJ_RED,
-  OBJ_BLUE,
   OBJ_YELLOW,
+  OBJ_BLUE,
   OBJ_BLACK
 };
 
