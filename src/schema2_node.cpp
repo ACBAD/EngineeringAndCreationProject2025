@@ -104,26 +104,25 @@ int main(int argc, char* argv[]) {
     case 2: {
       ROS_INFO(title_msg, "object detected, finding nearest...");
       auto nearest_object = std::min_element(object_infos.data.begin(), object_infos.data.end(),
-                                             [agninst_color](const eac_pkg::ObjectInfo& a,
-                                                             const eac_pkg::ObjectInfo& b) {
-                                               if (a.color == agninst_color)return false;
-                                               if (b.color == agninst_color)return true;
-                                               return a.distance < b.distance;
-                                             });
+        [agninst_color](const eac_pkg::ObjectInfo& a, const eac_pkg::ObjectInfo& b) {
+          if (a.color == agninst_color)return false;
+          if (b.color == agninst_color)return true;
+          return a.distance < b.distance;
+      });
       if (abs(nearest_object->angle) > ANGLE_TOLERANCE_LIMIT)
         sendRotateTwist(-nearest_object->angle);
       while (!checkInfoAviliable(object_infos.stamp)) { ros::spinOnce(); }
       nearest_object = std::min_element(object_infos.data.begin(), object_infos.data.end(),
-                                        [agninst_color](const eac_pkg::ObjectInfo& a, const eac_pkg::ObjectInfo& b) {
-                                          if (a.color == agninst_color)return false;
-                                          if (b.color == agninst_color)return true;
-                                          return a.distance < b.distance;
-                                        });
+        [agninst_color](const eac_pkg::ObjectInfo& a, const eac_pkg::ObjectInfo& b) {
+          if (a.color == agninst_color)return false;
+          if (b.color == agninst_color)return true;
+          return a.distance < b.distance;
+      });
       if (nearest_object == object_infos.data.end()) {
         ROS_WARN(title_msg, "object lost!!! return to case 1");
         sys_state = 1;
         break;
-      }
+       }
       if (abs(nearest_object->angle) < ANGLE_TOLERANCE_LIMIT) {
         sys_state++;
         break;
@@ -133,13 +132,13 @@ int main(int argc, char* argv[]) {
     }
     case 3: {
       ROS_INFO(title_msg, "aligning OK, try to reach object");
-      const auto nearest_object = std::min_element(object_infos.data.begin(), object_infos.data.end(),
-                                                   [agninst_color](const eac_pkg::ObjectInfo& a,
-                                                                   const eac_pkg::ObjectInfo& b) {
-                                                     if (a.color == agninst_color)return false;
-                                                     if (b.color == agninst_color)return true;
-                                                     return a.distance < b.distance;
-                                                   });
+      const auto nearest_object = std::min_element(object_infos.data.begin(),
+        object_infos.data.end(),
+      [agninst_color](const eac_pkg::ObjectInfo& a, const eac_pkg::ObjectInfo& b) {
+        if (a.color == agninst_color)return false;
+        if (b.color == agninst_color)return true;
+        return a.distance < b.distance;
+      });
       if (nearest_object->distance < DISTANCE_TOLERANCE_LIMIT) {
         sys_state++;
         break;
@@ -153,16 +152,14 @@ int main(int argc, char* argv[]) {
       ROS_INFO(title_msg, "reaching goal...");
       bool object_reached = false;
       const auto nearest_object = std::min_element(object_infos.data.begin(), object_infos.data.end(),
-                                                   [agninst_color](const eac_pkg::ObjectInfo& a,
-                                                                   const eac_pkg::ObjectInfo& b) {
-                                                     if (a.color == agninst_color)return false;
-                                                     if (b.color == agninst_color)return true;
-                                                     return a.distance < b.distance;
-                                                   });
+        [agninst_color](const eac_pkg::ObjectInfo& a,
+                       const eac_pkg::ObjectInfo& b) {
+          if (a.color == agninst_color)return false;
+          if (b.color == agninst_color)return true;
+          return a.distance < b.distance;
+      });
       ros::Timer reach_timer = node_handle.createTimer(ros::Duration(nearest_object->distance / 0.5),
-                                                       [&object_reached](const ros::TimerEvent&) {
-                                                         object_reached = true;
-                                                       });
+       [&object_reached](const ros::TimerEvent&) {object_reached = true;});
       auto checkReachObjectState = [agninst_color]() {
         if (checkInfoAviliable(object_infos.stamp)) {
           return std::any_of(object_infos.data.begin(), object_infos.data.end(),
