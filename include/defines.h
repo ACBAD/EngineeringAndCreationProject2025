@@ -65,8 +65,8 @@ public:
 
 enum ObjectColor {
   OBJ_RED,
-  OBJ_YELLOW,
   OBJ_BLUE,
+  OBJ_YELLOW,
   OBJ_BLACK
 };
 
