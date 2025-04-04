@@ -172,10 +172,14 @@ int main(int argc, char* argv[]) {
       while (!object_reached && checkReachObjectState()) { ros::spinOnce(); }
       sendStraightTwist(0);
       while (checkInfoAviliable(object_infos.stamp)) {
-        if (std::any_of(object_infos.data.begin(), object_infos.data.end(),
-                        [agninst_color](const eac_pkg::ObjectInfo& n) {
-                          return n.color != agninst_color && n.distance < DISTANCE_TOLERANCE_LIMIT;
-                        })) {
+        // ReSharper disable once CppTooWideScope
+        bool is_objects_in_cover_zone = std::any_of(object_infos.data.begin(), object_infos.data.end(),
+          [agninst_color](const eac_pkg::ObjectInfo& n) {
+            return n.color != agninst_color && n.distance < DISTANCE_TOLERANCE_LIMIT;
+        });
+        ROS_DEBUG("against_color is %d, obj distance is %f, obj color is %d",
+          agninst_color, object_infos.data[0].distance, object_infos.data[0].color);
+        if (is_objects_in_cover_zone) {
           sys_state++;
           break;
         }
