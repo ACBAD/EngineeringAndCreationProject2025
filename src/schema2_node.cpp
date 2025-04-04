@@ -77,7 +77,7 @@ int main(int argc, char* argv[]) {
   twist_pub = node_handle.advertise<geometry_msgs::Twist>("/cmd_vel", 2);
   ROS_INFO("waiting for trigger...");
   // ReSharper disable once CppDFALoopConditionNotUpdated
-  while (!trigger) {
+  while (!trigger && ros::ok()) {
     ros::spinOnce();
   }
   ROS_WARN("Triggered!!!");
@@ -89,10 +89,10 @@ int main(int argc, char* argv[]) {
   SideColor agninst_color = side_color == SIDE_RED ? SIDE_BLUE : SIDE_RED;
   uint8_t sys_state = 1;
   constexpr char title_msg[] = "schema2 acting: %s";
-  while (sys_state != 0) {
+  while (sys_state != 0 && ros::ok()) {
     switch (sys_state) {
     case 1: {
-      while (!checkInfoAviliable(object_infos.stamp)) { ros::spinOnce(); }
+      while (!checkInfoAviliable(object_infos.stamp) && ros::ok()) { ros::spinOnce(); }
       if (object_infos.data.size() > 0) {
         sys_state++;
         break;
@@ -163,10 +163,9 @@ int main(int argc, char* argv[]) {
       auto checkReachObjectState = [agninst_color]() {
         if (checkInfoAviliable(object_infos.stamp)) {
           return std::any_of(object_infos.data.begin(), object_infos.data.end(),
-                             [agninst_color](const eac_pkg::ObjectInfo& n) {
-                               return n.color != agninst_color && n.angle < ANGLE_TOLERANCE_LIMIT && n.distance >
-                                 DISTANCE_TOLERANCE_LIMIT;
-                             });
+            [agninst_color](const eac_pkg::ObjectInfo& n) {
+              return n.color != agninst_color && n.angle < ANGLE_TOLERANCE_LIMIT && n.distance > DISTANCE_TOLERANCE_LIMIT;
+           });
         }
         return true;
       };
