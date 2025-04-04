@@ -183,6 +183,7 @@ int main(int argc, char* argv[]) {
         sys_state = 1;
         break;
       }
+      break;
     }
     case 5: {
       std_msgs::UInt8 cover_angle;
