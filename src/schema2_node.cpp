@@ -191,12 +191,13 @@ int main(int argc, char* argv[]) {
       break;
     }
     case 5: {
+      ROS_INFO("try to cover object");
       std_msgs::UInt8 cover_angle;
       cover_angle.data = 180;
       cover_pub.publish(cover_angle);
       cover_state = false;
       // ReSharper disable once CppDFALoopConditionNotUpdated
-      while (!cover_state){ros::spinOnce();}
+      while (!cover_state && ros::ok()){ros::spinOnce();}
       ROS_INFO(title_msg, "back to security zone...");
       if (!gotoGoal(navi_client, SECURITY_ZONE)) {
         ROS_WARN(title_msg, "error ouccred in reaching security zone");
