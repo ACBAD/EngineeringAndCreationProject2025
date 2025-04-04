@@ -15,23 +15,6 @@ void objectCallback(const eac_pkg::ObjectInfoArray& msg) {
   object_infos = msg;
 }
 
-int gotoGoal(ros::ServiceClient& navi_client,
-            const PoseNames pose_name,
-            const uint8_t timeout = 0,
-            const geometry_msgs::Pose& pose = {}) {
-  const geometry_msgs::Pose empty_pose;
-  if(pose_name == COSTUM && pose == empty_pose) {
-    ROS_ERROR("need costum pose data");
-    return 1;
-  }
-  eac_pkg::EacGoal goal_msg;
-  goal_msg.request.goal_index = pose_name;
-  goal_msg.request.timeout = timeout;
-  navi_client.call(goal_msg);
-  if(goal_msg.response.state == false)return 3;
-  return 0;
-}
-
 ros::Publisher twist_pub;
 
 int sendRotateTwist(const double angle = 30, const double palstance = 1) {
@@ -123,7 +106,7 @@ int main(int argc, char* argv[]) {
         ROS_WARN(title_msg, "object lost!!! return to case 1");
         sys_state = 1;
         break;
-       }
+      }
       if (abs(nearest_object->angle) < ANGLE_TOLERANCE_LIMIT) {
         sys_state++;
         break;
@@ -199,10 +182,12 @@ int main(int argc, char* argv[]) {
       // ReSharper disable once CppDFALoopConditionNotUpdated
       while (!cover_state && ros::ok()){ros::spinOnce();}
       ROS_INFO(title_msg, "back to security zone...");
-      if (!gotoGoal(navi_client, SECURITY_ZONE)) {
+      eac_pkg::EacGoal goal_msg;
+      goal_msg.request.goal_index = SECURITY_ZONE;
+      goal_msg.request.timeout = 30;
+      navi_client.call(goal_msg);
+      if(goal_msg.response.state == false)
         ROS_WARN(title_msg, "error ouccred in reaching security zone");
-        return 2;
-      }
       sys_state++;
       break;
     }
