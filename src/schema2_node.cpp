@@ -115,7 +115,7 @@ int main(int argc, char* argv[]) {
       ROS_INFO(title_msg, "rotating, checking objects...");
       sendRotateTwist();
       // ReSharper disable once CppExpressionWithoutSideEffects
-      ros::Duration(1.00).sleep();
+      ros::Duration(0.5).sleep();
       break;
 
     }
@@ -136,9 +136,10 @@ int main(int argc, char* argv[]) {
           break;
         }
         ROS_DEBUG("Now angle is %f, limit is %f", nearest_object->angle, ANGLE_TOLERANCE_LIMIT(nearest_object->distance));
+        if(abs(nearest_object->angle) < ANGLE_TOLERANCE_LIMIT(nearest_object->distance))break;
         sendRotateTwist(nearest_object->angle > 0 ? 10 : -10);
         // ReSharper disable once CppExpressionWithoutSideEffects
-        ros::Duration(3.0).sleep();
+        ros::Duration(1.0).sleep();
         ROS_DEBUG("rotating ...");
       }
       ROS_DEBUG("Now angle is %f, limit is %f", nearest_object->angle, ANGLE_TOLERANCE_LIMIT(nearest_object->distance));
