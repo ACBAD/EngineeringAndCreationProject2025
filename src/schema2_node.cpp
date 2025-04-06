@@ -7,7 +7,7 @@
 #include <defines.h>
 #include <eac_pkg/EacGoal.h>
 
-#define ROS_SPINFOR(x) while ((x) && ros::ok()) { ros::spinOnce(); }
+#define ROS_SPINIF(x) while ((x) && ros::ok()) { ros::spinOnce(); }
 
 uint8_t trigger = 0;
 bool cover_state = false;
@@ -21,6 +21,7 @@ SideColor agninst_color;
  */
 void objectCallback(const eac_pkg::ObjectInfoArray& msg) {
   object_infos.stamp = msg.stamp;
+  object_infos.data.clear();
   std::copy_if(msg.data.begin(), msg.data.end(), std::back_inserter(object_infos.data),
     [](const eac_pkg::ObjectInfo& obj) {return obj.color != agninst_color;});
 }
@@ -94,7 +95,7 @@ int main(int argc, char* argv[]) {
   ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Debug);
   ROS_INFO("waiting for trigger...");
   // ReSharper disable once CppDFALoopConditionNotUpdated
-  ROS_SPINFOR(!trigger);
+  ROS_SPINIF(!trigger);
   ROS_WARN("Triggered!!!");
   if (!ros::param::get("side_color", side_color)) {
     ROS_ERROR("side_color not set!");
@@ -106,7 +107,7 @@ int main(int argc, char* argv[]) {
   while (sys_state != 0 && ros::ok()) {
     switch (sys_state) {
     case 1: {
-      ROS_SPINFOR(!checkInfoAviliable(object_infos.stamp));
+      ROS_SPINIF(!checkInfoAviliable(object_infos.stamp));
       if (object_infos.data.size() > 0) {
         sys_state++;
         break;
@@ -126,7 +127,7 @@ int main(int argc, char* argv[]) {
       // 顿挫转圈以将最近物体置于视野中央
       while (abs(nearest_object->angle) > ANGLE_TOLERANCE_LIMIT(nearest_object->distance)) {
         auto last_stamp = object_infos.stamp;
-        ROS_SPINFOR(object_infos.stamp - last_stamp < ros::Duration(1));
+        ROS_SPINIF(object_infos.stamp - last_stamp < ros::Duration(1));
         ROS_DEBUG("Now stamp is %f, last stamp is %f", object_infos.stamp.toSec(), last_stamp.toSec());
         try {nearest_object = findNearestObject();}
         catch (const std::out_of_range &e) {
@@ -143,7 +144,7 @@ int main(int argc, char* argv[]) {
       ROS_DEBUG("Now angle is %f, limit is %f", nearest_object->angle, ANGLE_TOLERANCE_LIMIT(nearest_object->distance));
       ROS_INFO(title_msg, "aligning ok");
       // 检查物体是否仍available
-      ROS_SPINFOR(!checkInfoAviliable(object_infos.stamp));
+      ROS_SPINIF(!checkInfoAviliable(object_infos.stamp));
 
       // 获取最新的最近物体信息
       try {nearest_object = findNearestObject();}
@@ -184,7 +185,7 @@ int main(int argc, char* argv[]) {
         return false;
       };
       ROS_WARN(title_msg, "checking if reached");
-      ROS_SPINFOR(checkReachObjectState());
+      ROS_SPINIF(checkReachObjectState());
       ROS_WARN(title_msg, "object coverable, stop");
       sendStraightTwist(0);
 
@@ -209,7 +210,7 @@ int main(int argc, char* argv[]) {
       cover_pub.publish(cover_angle);
       cover_state = false;
       // ReSharper disable once CppDFALoopConditionNotUpdated
-      ROS_SPINFOR(!cover_state);
+      ROS_SPINIF(!cover_state);
       ROS_INFO(title_msg, "back to security zone...");
       eac_pkg::EacGoal goal_msg;
       goal_msg.request.goal_index = SECURITY_ZONE;
