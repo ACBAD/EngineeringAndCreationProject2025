@@ -130,6 +130,9 @@ int main(int argc, char* argv[]) {
       }
       // 顿挫转圈以将最近物体置于视野中央
       while (abs(nearest_object->angle) > ANGLE_TOLERANCE_LIMIT(nearest_object->distance)) {
+        ros::spinOnce();
+        if(!checkInfoAviliable(object_infos.stamp))
+          continue;
         ROS_DEBUG("Now angle is %f", nearest_object->angle);
         sendRotateTwist(nearest_object->angle > 0 ? 10 : -10);
         sendRotateTwist(0);
