@@ -21,7 +21,7 @@ SideColor agninst_color;
  */
 void objectCallback(const eac_pkg::ObjectInfoArray& msg) {
   object_infos.stamp = msg.stamp;
-  object_infos.data.clear();
+  object_infos.data.resize(0);
   std::copy_if(msg.data.begin(), msg.data.end(), std::back_inserter(object_infos.data),
     [](const eac_pkg::ObjectInfo& obj) {return obj.color != agninst_color;});
 }
