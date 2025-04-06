@@ -127,6 +127,7 @@ int main(int argc, char* argv[]) {
       while (abs(nearest_object->angle) > ANGLE_TOLERANCE_LIMIT(nearest_object->distance)) {
         auto last_stamp = object_infos.stamp;
         ROS_SPINFOR(object_infos.stamp - last_stamp < ros::Duration(1));
+        ROS_DEBUG("Now stamp is %f, last stamp is %f", object_infos.stamp.toSec(), last_stamp.toSec());
         try {nearest_object = findNearestObject();}
         catch (const std::out_of_range &e) {
           ROS_WARN(title_msg, "object lost!!!");
