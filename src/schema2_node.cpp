@@ -122,17 +122,18 @@ int main(int argc, char* argv[]) {
       ROS_INFO(title_msg, "object detected, aligning nearest...");
       // 获取最近的物体
       auto nearest_object = object_infos.data.begin();
-      try {nearest_object = findNearestObject();}
-      catch (const std::out_of_range &e) {
-        ROS_WARN(title_msg, "object lost!!!");
-        sys_state = 1;
-        break;
-      }
+
       // 顿挫转圈以将最近物体置于视野中央
       while (abs(nearest_object->angle) > ANGLE_TOLERANCE_LIMIT(nearest_object->distance)) {
         ros::spinOnce();
         if(!checkInfoAviliable(object_infos.stamp))
           continue;
+        try {nearest_object = findNearestObject();}
+        catch (const std::out_of_range &e) {
+          ROS_WARN(title_msg, "object lost!!!");
+          sys_state = 1;
+          break;
+        }
         ROS_DEBUG("Now angle is %f", nearest_object->angle);
         sendRotateTwist(nearest_object->angle > 0 ? 10 : -10);
         sendRotateTwist(0);
