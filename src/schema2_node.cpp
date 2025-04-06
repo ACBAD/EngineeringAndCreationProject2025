@@ -124,21 +124,22 @@ int main(int argc, char* argv[]) {
       auto nearest_object = object_infos.data.begin();
       try {nearest_object = findNearestObject();}
       catch (const std::out_of_range &e) {
-        ROS_WARN("object lost!!!");
+        ROS_WARN(title_msg, "object lost!!!");
         sys_state = 1;
         break;
       }
       // 顿挫转圈以将最近物体置于视野中央
       while (abs(nearest_object->angle) > ANGLE_TOLERANCE_LIMIT(nearest_object->distance)) {
-        sendRotateTwist(nearest_object->angle > 0 ? -10 : 10);
+        sendRotateTwist(nearest_object->angle > 0 ? 10 : -10);
       }
+      ROS_INFO(title_msg, "aligning ok");
       // 检查物体是否仍available
       ROS_SPINFOR(!checkInfoAviliable(object_infos.stamp));
 
       // 获取最新的最近物体信息
       try {nearest_object = findNearestObject();}
       catch (const std::out_of_range &e) {
-        ROS_WARN("object lost!!!");
+        ROS_WARN(title_msg, "object lost!!!");
         sys_state = 1;
         break;
       }
@@ -158,12 +159,12 @@ int main(int argc, char* argv[]) {
       auto nearest_object = object_infos.data.begin();
       try {nearest_object = findNearestObject();}
       catch (const std::out_of_range &e) {
-        ROS_WARN("object lost!!!");
+        ROS_WARN(title_msg, "object lost!!!");
         sys_state = 1;
         break;
       }
       sendStraightTwist(0.5);
-      ROS_WARN("go straight for object");
+      ROS_WARN(title_msg, "go straight for object");
       // 定义检查物体是否到达的函数
       auto checkReachObjectState = []() {
         if (checkInfoAviliable(object_infos.stamp)) {
@@ -173,9 +174,9 @@ int main(int argc, char* argv[]) {
             });}
         return false;
       };
-      ROS_WARN("checking if reached");
+      ROS_WARN(title_msg, "checking if reached");
       ROS_SPINFOR(checkReachObjectState());
-      ROS_WARN("object coverable, stop");
+      ROS_WARN(title_msg, "object coverable, stop");
       sendStraightTwist(0);
 
       while (checkInfoAviliable(object_infos.stamp)) {
@@ -186,7 +187,7 @@ int main(int argc, char* argv[]) {
           sys_state++;
           break;
         }
-        ROS_WARN("reach failed, back to case 1");
+        ROS_WARN(title_msg, "reach failed, back to case 1");
         sys_state = 1;
         break;
       }
