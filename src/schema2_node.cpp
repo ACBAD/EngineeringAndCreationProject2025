@@ -86,7 +86,7 @@ int main(int argc, char* argv[]) {
   ros::init(argc, argv, "schema2_node");
   ros::NodeHandle node_handle;
   ros::Subscriber trigger_sub = node_handle.subscribe("/schema2_cmd", 2, nodeCallback);
-  ros::Subscriber object_sub = node_handle.subscribe("/objects_data", 2, objectCallback);
+  ros::Subscriber object_sub = node_handle.subscribe("/objects_data", 1, objectCallback);
   ros::ServiceClient navi_client = node_handle.serviceClient<eac_pkg::EacGoal>("navigation");
   const ros::Publisher cover_pub = node_handle.advertise<std_msgs::UInt8>("/cover_cmd", 2);
   ros::Subscriber cover_sub = node_handle.subscribe("/cover_state", 2, coverStateCallback);
