@@ -7,8 +7,9 @@
 #include <geometry_msgs/Pose.h>
 constexpr double pi = 3.14159265358979323;
 
+#define COVERABLE_DISTANCE 320
 #define DISTANCE_TOLERANCE_LIMIT 9999999999999
-#define ANGLE_TOLERANCE_LIMIT 199999999999999
+#define ANGLE_TOLERANCE_LIMIT(x) 30 * x / 640
 
 enum SideColor {
   SIDE_RED,

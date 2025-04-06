@@ -67,7 +67,7 @@ if __name__ == "__main__":
             angle = (IMAGE_WIDTH / 2 - center_x) * ANGLE_SCALE
             distance = center_y * DISTANCE_SCALE
             this_obj.angle = angle
-            this_obj.distance = distance
+            this_obj.distance = IMAGE_HEIGHT - distance
             this_obj.color = color_num
             this_obj.shape = 0
             objs_msg.data.append(this_obj)

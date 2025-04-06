@@ -7,12 +7,18 @@
 #include <defines.h>
 #include <eac_pkg/EacGoal.h>
 
+#define ROS_SPINFOR(x) while (x && ros::ok()) { ros::spinOnce(); }
+
 uint8_t trigger = 0;
 bool cover_state = false;
 eac_pkg::ObjectInfoArray object_infos;
+int side_color;
+SideColor agninst_color;
 
 void objectCallback(const eac_pkg::ObjectInfoArray& msg) {
-  object_infos = msg;
+  object_infos.stamp = msg.stamp;
+  std::copy_if(msg.data.begin(), msg.data.end(), std::back_inserter(object_infos.data),
+    [](const eac_pkg::ObjectInfo& obj) {return obj.color != agninst_color;});
 }
 
 ros::Publisher twist_pub;
@@ -30,6 +36,12 @@ int sendRotateTwist(const double angle = 30, const double palstance = 1) {
   return 0;
 }
 
+/**
+ *
+ * @param distance_velocity 当速度为0时，此值为速度，速度非零时此值为前进距离
+ * @param velocity 速度，默认为0
+ * @return 构造的Twist消息
+ */
 geometry_msgs::Twist sendStraightTwist(const double distance_velocity, const double velocity = 0) {
   geometry_msgs::Twist straight_cmd;
   straight_cmd.linear.x = velocity == 0 ? distance_velocity : 0.5;
@@ -49,6 +61,12 @@ void nodeCallback(const std_msgs::UInt8& msg) {
 
 void coverStateCallback(const std_msgs::UInt8 msg) {cover_state = msg.data;}
 
+auto findNearestObject() {
+  if(object_infos.data.empty())throw std::out_of_range("obj is none");
+  return std::min_element(object_infos.data.begin(), object_infos.data.end(),
+    [](const eac_pkg::ObjectInfo& a, const eac_pkg::ObjectInfo& b) {return a.distance < b.distance;});
+}
+
 int main(int argc, char* argv[]) {
   ros::init(argc, argv, "schema2_node");
   ros::NodeHandle node_handle;
@@ -61,53 +79,57 @@ int main(int argc, char* argv[]) {
   ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Debug);
   ROS_INFO("waiting for trigger...");
   // ReSharper disable once CppDFALoopConditionNotUpdated
-  while (!trigger && ros::ok()) {
-    ros::spinOnce();
-  }
+  ROS_SPINFOR(!trigger);
   ROS_WARN("Triggered!!!");
-  int side_color;
   if (!ros::param::get("side_color", side_color)) {
     ROS_ERROR("side_color not set!");
     return 1;
   }
-  SideColor agninst_color = side_color == SIDE_RED ? SIDE_BLUE : SIDE_RED;
+  agninst_color = side_color == SIDE_RED ? SIDE_BLUE : SIDE_RED;
   uint8_t sys_state = 1;
   constexpr char title_msg[] = "schema2 acting: %s";
   while (sys_state != 0 && ros::ok()) {
     switch (sys_state) {
     case 1: {
-      while (!checkInfoAviliable(object_infos.stamp) && ros::ok()) { ros::spinOnce(); }
+      ROS_SPINFOR(!checkInfoAviliable(object_infos.stamp));
       if (object_infos.data.size() > 0) {
         sys_state++;
         break;
       }
       ROS_INFO(title_msg, "rotating, checking objects...");
       sendRotateTwist();
+      // ReSharper disable once CppExpressionWithoutSideEffects
+      ros::Duration(1.00).sleep();
       break;
     }
     case 2: {
-      ROS_INFO(title_msg, "object detected, finding nearest...");
-      auto nearest_object = std::min_element(object_infos.data.begin(), object_infos.data.end(),
-        [agninst_color](const eac_pkg::ObjectInfo& a, const eac_pkg::ObjectInfo& b) {
-          if (a.color == agninst_color)return false;
-          if (b.color == agninst_color)return true;
-          return a.distance < b.distance;
-      });
-      if (abs(nearest_object->angle) > ANGLE_TOLERANCE_LIMIT)
-        sendRotateTwist(-nearest_object->angle);
-      while (!checkInfoAviliable(object_infos.stamp)) { ros::spinOnce(); }
-      nearest_object = std::min_element(object_infos.data.begin(), object_infos.data.end(),
-        [agninst_color](const eac_pkg::ObjectInfo& a, const eac_pkg::ObjectInfo& b) {
-          if (a.color == agninst_color)return false;
-          if (b.color == agninst_color)return true;
-          return a.distance < b.distance;
-      });
-      if (nearest_object == object_infos.data.end()) {
-        ROS_WARN(title_msg, "object lost!!! return to case 1");
+      ROS_INFO(title_msg, "object detected, aligning nearest...");
+      // 获取最近的物体
+      auto nearest_object = object_infos.data.begin();
+      try {nearest_object = findNearestObject();}
+      catch (const std::out_of_range &e) {
+        ROS_WARN("object lost!!!");
         sys_state = 1;
         break;
       }
-      if (abs(nearest_object->angle) < ANGLE_TOLERANCE_LIMIT) {
+      // 顿挫转圈以将最近物体置于视野中央
+      while (abs(nearest_object->angle) > ANGLE_TOLERANCE_LIMIT(nearest_object->distance)) {
+        sendRotateTwist(nearest_object->angle > 0 ? -10 : 10);
+        // ReSharper disable once CppExpressionWithoutSideEffects
+        ros::Duration(1).sleep();
+      }
+      // 检查物体是否仍available
+      ROS_SPINFOR(!checkInfoAviliable(object_infos.stamp));
+
+      // 获取最新的最近物体信息
+      try {nearest_object = findNearestObject();}
+      catch (const std::out_of_range &e) {
+        ROS_WARN("object lost!!!");
+        sys_state = 1;
+        break;
+      }
+      // 如果物体已进入视野中央，进入下一case
+      if (abs(nearest_object->angle) < ANGLE_TOLERANCE_LIMIT(nearest_object->distance)) {
         sys_state++;
         break;
       }
@@ -116,54 +138,36 @@ int main(int argc, char* argv[]) {
     }
     case 3: {
       ROS_INFO(title_msg, "aligning OK, try to reach object");
-      const auto nearest_object = std::min_element(object_infos.data.begin(),
-        object_infos.data.end(),
-      [agninst_color](const eac_pkg::ObjectInfo& a, const eac_pkg::ObjectInfo& b) {
-        if (a.color == agninst_color)return false;
-        if (b.color == agninst_color)return true;
-        return a.distance < b.distance;
-      });
-      if (nearest_object->distance < DISTANCE_TOLERANCE_LIMIT) {
-        sys_state++;
+      // 获取最近物体
+      auto nearest_object = object_infos.data.begin();
+      try {nearest_object = findNearestObject();}
+      catch (const std::out_of_range &e) {
+        ROS_WARN("object lost!!!");
+        sys_state = 1;
         break;
       }
-      ROS_INFO(title_msg, "too far, reaching ...");
       sendStraightTwist(0.5);
-      sys_state++;
-      break;
-    }
-    case 4: {
-      ROS_INFO(title_msg, "reaching goal...");
-      bool object_reached = false;
-      const auto nearest_object = std::min_element(object_infos.data.begin(), object_infos.data.end(),
-        [agninst_color](const eac_pkg::ObjectInfo& a,
-                       const eac_pkg::ObjectInfo& b) {
-          if (a.color == agninst_color)return false;
-          if (b.color == agninst_color)return true;
-          return a.distance < b.distance;
-      });
-      ros::Timer reach_timer = node_handle.createTimer(ros::Duration(nearest_object->distance / 0.5),
-       [&object_reached](const ros::TimerEvent&) {object_reached = true;});
-      auto checkReachObjectState = [agninst_color]() {
+      ROS_WARN("go straight for object");
+      // 定义检查物体是否到达的函数
+      auto checkReachObjectState = []() {
         if (checkInfoAviliable(object_infos.stamp)) {
           return std::any_of(object_infos.data.begin(), object_infos.data.end(),
-            [agninst_color](const eac_pkg::ObjectInfo& n) {
-              return n.color != agninst_color && n.angle < ANGLE_TOLERANCE_LIMIT && n.distance > DISTANCE_TOLERANCE_LIMIT;
-           });
-        }
-        return true;
+            [](const eac_pkg::ObjectInfo& n) {
+              return n.distance < COVERABLE_DISTANCE;
+            });}
+        return false;
       };
-      while (!object_reached && checkReachObjectState()) { ros::spinOnce(); }
+      ROS_WARN("checking if reached");
+      ROS_SPINFOR(checkReachObjectState());
+      ROS_WARN("object coverable, stop");
       sendStraightTwist(0);
+      ROS_WARN("Debug OK");
+      return 0;
       while (checkInfoAviliable(object_infos.stamp)) {
         // ReSharper disable once CppTooWideScope
-        bool is_objects_in_cover_zone = std::any_of(object_infos.data.begin(), object_infos.data.end(),
-          [agninst_color](const eac_pkg::ObjectInfo& n) {
-            return n.color != agninst_color && n.distance < DISTANCE_TOLERANCE_LIMIT;
-        });
         ROS_DEBUG("against_color is %d, obj distance is %f, obj color is %d",
           agninst_color, object_infos.data[0].distance, object_infos.data[0].color);
-        if (is_objects_in_cover_zone) {
+        if (checkReachObjectState()) {
           sys_state++;
           break;
         }
@@ -173,25 +177,24 @@ int main(int argc, char* argv[]) {
       }
       break;
     }
-    case 5: {
+    case 4: {
       ROS_INFO("try to cover object");
       std_msgs::UInt8 cover_angle;
-      cover_angle.data = 180;
+      cover_angle.data = 5;
       cover_pub.publish(cover_angle);
       cover_state = false;
       // ReSharper disable once CppDFALoopConditionNotUpdated
-      while (!cover_state && ros::ok()){ros::spinOnce();}
+      ROS_SPINFOR(!cover_state);
       ROS_INFO(title_msg, "back to security zone...");
       eac_pkg::EacGoal goal_msg;
       goal_msg.request.goal_index = SECURITY_ZONE;
       goal_msg.request.timeout = 30;
-      navi_client.call(goal_msg);
-      if(goal_msg.response.state == false)
+      if(navi_client.call(goal_msg) == false || goal_msg.response.state == false)
         ROS_WARN(title_msg, "error ouccred in reaching security zone");
       sys_state++;
       break;
     }
-    case 6: {
+    case 5: {
       ROS_INFO(title_msg, "releasing objects...");
       std_msgs::UInt8 cover_angle;
       cover_angle.data = 0;
@@ -204,7 +207,7 @@ int main(int argc, char* argv[]) {
     }
     default: {
       ROS_WARN(title_msg, "invalid sys_state, return to 0");
-      sys_state = 0;
+      sys_state = 1;
       break;
     }
     }
