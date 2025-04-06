@@ -171,7 +171,7 @@ int main(int argc, char* argv[]) {
         sys_state = 1;
         break;
       }
-      sendStraightTwist(0.5);
+      sendStraightTwist(0.2);
       ROS_WARN(title_msg, "go straight for object");
       // 定义检查物体是否到达的函数
       auto checkReachObjectState = []() {
