@@ -131,6 +131,9 @@ int main(int argc, char* argv[]) {
       // 顿挫转圈以将最近物体置于视野中央
       while (abs(nearest_object->angle) > ANGLE_TOLERANCE_LIMIT(nearest_object->distance)) {
         sendRotateTwist(nearest_object->angle > 0 ? 10 : -10);
+        sendRotateTwist(0);
+        // ReSharper disable once CppExpressionWithoutSideEffects
+        ros::Duration(1.0).sleep();
       }
       ROS_INFO(title_msg, "aligning ok");
       // 检查物体是否仍available
