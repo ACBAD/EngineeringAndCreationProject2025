@@ -127,7 +127,7 @@ int main(int argc, char* argv[]) {
       // 顿挫转圈以将最近物体置于视野中央
       while (abs(nearest_object->angle) > ANGLE_TOLERANCE_LIMIT(nearest_object->distance)) {
         auto last_stamp = object_infos.stamp;
-        ROS_SPINIF(object_infos.stamp - last_stamp < ros::Duration(1));
+        ROS_SPINIF(!checkInfoAviliable(object_infos.stamp));
         ROS_DEBUG("Now stamp is %f, last stamp is %f", object_infos.stamp.toSec(), last_stamp.toSec());
         try {nearest_object = findNearestObject();}
         catch (const std::out_of_range &e) {
@@ -142,7 +142,6 @@ int main(int argc, char* argv[]) {
         ros::Duration(1.0).sleep();
         ROS_DEBUG("rotating ...");
       }
-      ROS_DEBUG("Now angle is %f, limit is %f", nearest_object->angle, ANGLE_TOLERANCE_LIMIT(nearest_object->distance));
       ROS_INFO(title_msg, "aligning ok");
       // 检查物体是否仍available
       ROS_SPINIF(!checkInfoAviliable(object_infos.stamp));
@@ -156,8 +155,6 @@ int main(int argc, char* argv[]) {
       }
       // 如果物体已进入视野中央，进入下一case
       if (abs(nearest_object->angle) < ANGLE_TOLERANCE_LIMIT(nearest_object->distance)) {
-        ROS_WARN("Debug OK");
-        return 0;
         sys_state++;
         break;
       }
