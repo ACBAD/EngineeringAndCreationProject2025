@@ -15,6 +15,10 @@ eac_pkg::ObjectInfoArray object_infos;
 int side_color;
 SideColor agninst_color;
 
+/**
+ * 视觉识别回调，滤除对方物体
+ * @param msg 物体信息列表
+ */
 void objectCallback(const eac_pkg::ObjectInfoArray& msg) {
   object_infos.stamp = msg.stamp;
   std::copy_if(msg.data.begin(), msg.data.end(), std::back_inserter(object_infos.data),
@@ -23,7 +27,13 @@ void objectCallback(const eac_pkg::ObjectInfoArray& msg) {
 
 ros::Publisher twist_pub;
 
-int sendRotateTwist(const double angle = 30, const double palstance = 1) {
+/**
+ *
+ * @param angle 角度，默认10
+ * @param palstance 角速度，默认0.1
+ * @return 0
+ */
+int sendRotateTwist(const double angle = 10, const double palstance = 0.1) {
   const double radian = angle * (pi / 180.0);
   const double wait_sec = radian / palstance;
   geometry_msgs::Twist rotate_cmd;
@@ -61,6 +71,11 @@ void nodeCallback(const std_msgs::UInt8& msg) {
 
 void coverStateCallback(const std_msgs::UInt8 msg) {cover_state = msg.data;}
 
+/**
+ * 寻找物体列表内的最近物体，基于distance属性
+ * @exception std::out_of_range
+ * @return 最近物体在object_infos的迭代器
+ */
 auto findNearestObject() {
   if(object_infos.data.empty())throw std::out_of_range("obj is none");
   return std::min_element(object_infos.data.begin(), object_infos.data.end(),
@@ -101,6 +116,7 @@ int main(int argc, char* argv[]) {
       // ReSharper disable once CppExpressionWithoutSideEffects
       ros::Duration(1.00).sleep();
       break;
+
     }
     case 2: {
       ROS_INFO(title_msg, "object detected, aligning nearest...");
@@ -115,8 +131,6 @@ int main(int argc, char* argv[]) {
       // 顿挫转圈以将最近物体置于视野中央
       while (abs(nearest_object->angle) > ANGLE_TOLERANCE_LIMIT(nearest_object->distance)) {
         sendRotateTwist(nearest_object->angle > 0 ? -10 : 10);
-        // ReSharper disable once CppExpressionWithoutSideEffects
-        ros::Duration(1).sleep();
       }
       // 检查物体是否仍available
       ROS_SPINFOR(!checkInfoAviliable(object_infos.stamp));
@@ -130,6 +144,8 @@ int main(int argc, char* argv[]) {
       }
       // 如果物体已进入视野中央，进入下一case
       if (abs(nearest_object->angle) < ANGLE_TOLERANCE_LIMIT(nearest_object->distance)) {
+        ROS_WARN("Debug OK");
+        return 0;
         sys_state++;
         break;
       }
@@ -161,8 +177,7 @@ int main(int argc, char* argv[]) {
       ROS_SPINFOR(checkReachObjectState());
       ROS_WARN("object coverable, stop");
       sendStraightTwist(0);
-      ROS_WARN("Debug OK");
-      return 0;
+
       while (checkInfoAviliable(object_infos.stamp)) {
         // ReSharper disable once CppTooWideScope
         ROS_DEBUG("against_color is %d, obj distance is %f, obj color is %d",
