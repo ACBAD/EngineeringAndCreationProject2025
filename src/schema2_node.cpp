@@ -125,9 +125,7 @@ int main(int argc, char* argv[]) {
 
       // 顿挫转圈以将最近物体置于视野中央
       while (abs(nearest_object->angle) > ANGLE_TOLERANCE_LIMIT(nearest_object->distance)) {
-        ros::spinOnce();
-        if(!checkInfoAviliable(object_infos.stamp))
-          continue;
+        ROS_SPINFOR(!checkInfoAviliable(object_infos.stamp));
         try {nearest_object = findNearestObject();}
         catch (const std::out_of_range &e) {
           ROS_WARN(title_msg, "object lost!!!");
@@ -141,6 +139,7 @@ int main(int argc, char* argv[]) {
         ros::Duration(3.0).sleep();
         ROS_DEBUG("rotating ...");
       }
+      ROS_DEBUG("Now angle is %f, limit is %f", nearest_object->angle, ANGLE_TOLERANCE_LIMIT(nearest_object->distance));
       ROS_INFO(title_msg, "aligning ok");
       // 检查物体是否仍available
       ROS_SPINFOR(!checkInfoAviliable(object_infos.stamp));
