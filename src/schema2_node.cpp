@@ -7,7 +7,7 @@
 #include <defines.h>
 #include <eac_pkg/EacGoal.h>
 
-#define ROS_SPINFOR(x) while (x && ros::ok()) { ros::spinOnce(); }
+#define ROS_SPINFOR(x) while ((x) && ros::ok()) { ros::spinOnce(); }
 
 uint8_t trigger = 0;
 bool cover_state = false;
@@ -125,7 +125,8 @@ int main(int argc, char* argv[]) {
 
       // 顿挫转圈以将最近物体置于视野中央
       while (abs(nearest_object->angle) > ANGLE_TOLERANCE_LIMIT(nearest_object->distance)) {
-        ROS_SPINFOR(!checkInfoAviliable(object_infos.stamp));
+        auto last_stamp = object_infos.stamp;
+        ROS_SPINFOR(object_infos.stamp - last_stamp < ros::Duration(1));
         try {nearest_object = findNearestObject();}
         catch (const std::out_of_range &e) {
           ROS_WARN(title_msg, "object lost!!!");
@@ -134,7 +135,6 @@ int main(int argc, char* argv[]) {
         }
         ROS_DEBUG("Now angle is %f, limit is %f", nearest_object->angle, ANGLE_TOLERANCE_LIMIT(nearest_object->distance));
         sendRotateTwist(nearest_object->angle > 0 ? 10 : -10);
-        sendRotateTwist(0);
         // ReSharper disable once CppExpressionWithoutSideEffects
         ros::Duration(3.0).sleep();
         ROS_DEBUG("rotating ...");
