@@ -33,7 +33,7 @@ ros::Publisher twist_pub;
  * @param palstance 角速度，默认0.1
  * @return 0
  */
-int sendRotateTwist(const double angle = 10, const double palstance = 0.1) {
+int sendRotateTwist(const double angle = 10, const double palstance = 0.5) {
   const double radian = angle * (pi / 180.0);
   const double wait_sec = radian / palstance;
   geometry_msgs::Twist rotate_cmd;
