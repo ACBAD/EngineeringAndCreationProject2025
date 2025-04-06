@@ -138,7 +138,7 @@ int main(int argc, char* argv[]) {
         sendRotateTwist(nearest_object->angle > 0 ? 10 : -10);
         sendRotateTwist(0);
         // ReSharper disable once CppExpressionWithoutSideEffects
-        ros::Duration(1.0).sleep();
+        ros::Duration(3.0).sleep();
         ROS_DEBUG("rotating ...");
       }
       ROS_INFO(title_msg, "aligning ok");
