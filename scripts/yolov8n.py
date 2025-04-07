@@ -238,7 +238,7 @@ def init_nn(nn_lib='/home/khadas/catkin/src/EngineeringAndCreationProject2025/sc
     global init_state, NUM_CLS, LISTSIZE
     NUM_CLS = cls_num
     LISTSIZE = NUM_CLS + 64
-    yolov3 = KSNN('VIM3')
+    global yolov3 = KSNN('VIM3')
     print(' |---+ KSNN Version: {} +---| '.format(yolov3.get_nn_version()))
 
     print('Start init neural network ...')
