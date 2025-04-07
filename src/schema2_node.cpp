@@ -6,12 +6,14 @@
 #include <std_msgs/UInt8.h>
 #include <defines.h>
 #include <eac_pkg/EacGoal.h>
+#include <eac_pkg/ZoneInfo.h>
 
 #define ROS_SPINIF(x) while ((x) && ros::ok()) { ros::spinOnce(); }
 
 uint8_t trigger = 0;
 bool cover_state = false;
 eac_pkg::ObjectInfoArray object_infos;
+eac_pkg::ZoneInfo zone_info;
 int side_color;
 SideColor agninst_color;
 
@@ -24,6 +26,10 @@ void objectCallback(const eac_pkg::ObjectInfoArray& msg) {
   object_infos.data.resize(0);
   std::copy_if(msg.data.begin(), msg.data.end(), std::back_inserter(object_infos.data),
     [](const eac_pkg::ObjectInfo& obj) {return obj.color != agninst_color;});
+}
+
+void zoneCallback(const eac_pkg::ZoneInfo& msg) {
+  zone_info = msg;
 }
 
 ros::Publisher twist_pub;

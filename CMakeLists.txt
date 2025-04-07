@@ -61,6 +61,7 @@ add_message_files(
   VrResult.msg
   ObjectInfo.msg
   ObjectInfoArray.msg
+  ZoneInfo.msg
 )
 
 ## Generate services in the 'srv' folder

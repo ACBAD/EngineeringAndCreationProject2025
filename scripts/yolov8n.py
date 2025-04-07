@@ -16,9 +16,9 @@ from eac_cv import create_mask, calculate_ratio
 GRID0 = 20
 GRID1 = 40
 GRID2 = 80
-LISTSIZE = 68
 SPAN = 1
 NUM_CLS = 4
+LISTSIZE = NUM_CLS + 64
 MAX_BOXES = 500
 OBJ_THRESH = 0.4
 NMS_THRESH = 0.5
@@ -168,8 +168,13 @@ def draw(image, boxes, scores, classes):
                    cv.FONT_HERSHEY_SIMPLEX,
                    0.6, (0, 0, 255), 2)
 
+init_state = False
 
 def inference(input_image, do_filter=False):
+    if not init_state:
+        print('Warning! KSNN not init, using default configuration')
+        init_nn()
+
     orig_img = input_image
     img = cv.resize(orig_img, (640, 640)).astype(np.float32)
     img[:, :, 0] = img[:, :, 0] - mean[0]
@@ -229,14 +234,18 @@ def inference(input_image, do_filter=False):
     # print(f"My data: {(filtered_boxes, filtered_scores, filtered_classes)}")
     return np.concatenate(filtered_boxes), np.concatenate(filtered_scores), np.concatenate(filtered_classes)
 
+def init_nn(nn_lib='/home/khadas/catkin/src/EngineeringAndCreationProject2025/scripts/libnn_new_eac.so', nn_nb='/home/khadas/catkin/src/EngineeringAndCreationProject2025/scripts/new_eac.nb', cls_num=4):
+    global init_state, NUM_CLS, LISTSIZE
+    NUM_CLS = cls_num
+    LISTSIZE = NUM_CLS + 64
+    yolov3 = KSNN('VIM3')
+    print(' |---+ KSNN Version: {} +---| '.format(yolov3.get_nn_version()))
 
-yolov3 = KSNN('VIM3')
-print(' |---+ KSNN Version: {} +---| '.format(yolov3.get_nn_version()))
-
-print('Start init neural network ...')
-yolov3.nn_init(library='/home/khadas/catkin/src/EngineeringAndCreationProject2025/scripts/libnn_new_eac.so',
-               model='/home/khadas/catkin/src/EngineeringAndCreationProject2025/scripts/new_eac.nb', level=0)
-print('Done.')
+    print('Start init neural network ...')
+    yolov3.nn_init(library=nn_lib,
+                   model=nn_nb, level=0)
+    print('Done.')
+    init_state = True
 
 if __name__ == "__main__":
     print('Get input data ...')
