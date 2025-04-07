@@ -192,8 +192,7 @@ int main(int argc, char* argv[]) {
       ROS_SPINIF(!checkReachObjectState());
       ROS_WARN(title_msg, "object coverable, stop");
       sendStraightTwist(0);
-      ROS_WARN("Debug OK!");
-      return 0;
+
       while (checkInfoAviliable(object_infos.stamp)) {
         // ReSharper disable once CppTooWideScope
         ROS_DEBUG("against_color is %d, obj distance is %f, obj color is %d",
@@ -217,6 +216,8 @@ int main(int argc, char* argv[]) {
       // ReSharper disable once CppDFALoopConditionNotUpdated
       ROS_SPINIF(!cover_state);
       ROS_INFO(title_msg, "back to security zone...");
+      ROS_WARN("Debug OK!");
+      return 0;
       eac_pkg::EacGoal goal_msg;
       goal_msg.request.goal_index = SECURITY_ZONE;
       goal_msg.request.timeout = 30;
