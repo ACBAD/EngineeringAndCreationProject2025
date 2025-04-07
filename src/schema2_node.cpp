@@ -93,14 +93,14 @@ int main(int argc, char* argv[]) {
   ros::Subscriber cover_sub = node_handle.subscribe("/cover_state", 2, coverStateCallback);
   twist_pub = node_handle.advertise<geometry_msgs::Twist>("/cmd_vel", 2);
   ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Debug);
-  ROS_INFO("waiting for trigger...");
-  // ReSharper disable once CppDFALoopConditionNotUpdated
-  ROS_SPINIF(!trigger);
-  ROS_WARN("Triggered!!!");
   if (!ros::param::get("side_color", side_color)) {
     ROS_ERROR("side_color not set!");
     return 1;
   }
+  ROS_INFO("waiting for trigger...");
+  // ReSharper disable once CppDFALoopConditionNotUpdated
+  ROS_SPINIF(!trigger);
+  ROS_WARN("Triggered!!!");
   agninst_color = side_color == SIDE_RED ? SIDE_BLUE : SIDE_RED;
   uint8_t sys_state = 1;
   constexpr char title_msg[] = "schema2 acting: %s";
