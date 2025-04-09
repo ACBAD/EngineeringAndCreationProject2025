@@ -168,8 +168,8 @@ void sendAllArgs(const SerialDevice& sd) {
     total_right = stm32_data.getElementEasier<double>("R");
     total_left = stm32_data.getElementEasier<double>("L");
     cover_state.data = stm32_data.getElementEasier<bool>("cover_state");
-    bool is_right_clog = stm32_data.getElementEasier<bool>("is_right_clog");
-    bool is_left_clog = stm32_data.getElementEasier<bool>("is_left_clog");
+    is_right_clog = stm32_data.getElementEasier<bool>("is_right_clog");
+    is_left_clog = stm32_data.getElementEasier<bool>("is_left_clog");
   }catch (std::runtime_error& e) {
     ROS_WARN("Error in parsing: %s", e.what());
     return;
