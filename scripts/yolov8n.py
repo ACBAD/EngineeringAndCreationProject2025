@@ -241,7 +241,6 @@ def init_nn(nn_lib='/home/khadas/catkin/src/EngineeringAndCreationProject2025/sc
     global yolov3
     yolov3 = KSNN('VIM3')
     print(' |---+ KSNN Version: {} +---| '.format(yolov3.get_nn_version()))
-
     print('Start init neural network ...')
     yolov3.nn_init(library=nn_lib,
                    model=nn_nb, level=0)

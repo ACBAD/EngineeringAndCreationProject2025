@@ -4,11 +4,11 @@
 import time
 from typing import cast
 import cv2
+from std_msgs.msg import UInt8
 import rospy
 from eac_pkg.msg import ZoneInfo
 from yolov8n import inference, init_nn
 parent_dir = '/home/khadas/catkin/src/EngineeringAndCreationProject2025/scripts'
-init_nn(nn_lib=f'{parent_dir}/libnn_new_zone.so', nn_nb=f'{parent_dir}/new_zone.nb')
 import numpy as np
 
 IMAGE_WIDTH = 640
@@ -25,6 +25,13 @@ def limitValue(val: float):
     elif val < 0:
         return 0
     return val
+running_state = False
+def set_running_state(target_state: UInt8):
+    global running_state
+    if target_state.data:
+        running_state = True
+    else:
+        running_state = False
 
 if __name__ == "__main__":
     rospy.init_node("zone_info_node")
@@ -33,10 +40,17 @@ if __name__ == "__main__":
     except KeyError:
         rospy.logfatal('Please set side_color!!!')
         exit(1)
+    if side_color == 0:
+        init_nn(nn_lib=f'{parent_dir}/libnn_red_zone.so', nn_nb=f'{parent_dir}/red_zone.nb')
+    else:
+        init_nn(nn_lib=f'{parent_dir}/libnn_blue_zone.so', nn_nb=f'{parent_dir}/blue_zone.nb')
     rospy.logwarn("zone_info_node started")
     pub = rospy.Publisher("/zone_data", ZoneInfo, queue_size=1)
+    state_sub = rospy.Subscriber('/zond_detect_state', UInt8, set_running_state)
     cap = cv2.VideoCapture(1)
     while not rospy.is_shutdown():
+        if not running_state:
+            continue
         read_state, cap_img = cap.read()
         if not read_state:
             rospy.logwarn("Cam read failed")

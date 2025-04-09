@@ -16,6 +16,7 @@ eac_pkg::ObjectInfoArray object_infos;
 eac_pkg::ZoneInfo zone_info;
 int side_color;
 SideColor agninst_color;
+ros::Publisher twist_pub;
 
 /**
  * 视觉识别回调，滤除对方物体
@@ -32,7 +33,10 @@ void zoneCallback(const eac_pkg::ZoneInfo& msg) {
   zone_info = msg;
 }
 
-ros::Publisher twist_pub;
+enum DetectionTypes {
+  OBJECT_DETECT,
+  ZONE_DETECT
+};
 
 /**
  *
@@ -99,6 +103,29 @@ int main(int argc, char* argv[]) {
   ros::Subscriber cover_sub = node_handle.subscribe("/cover_state", 2, coverStateCallback);
   twist_pub = node_handle.advertise<geometry_msgs::Twist>("/cmd_vel", 2);
   ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Debug);
+  ros::Publisher object_detect_switcher = node_handle.advertise<std_msgs::UInt8>("/object_detect_state", 1);
+  ros::Publisher zone_detect_switcher = node_handle.advertise<std_msgs::UInt8>("/zone_detect_state", 1);
+  auto switchDetectType = [object_detect_switcher, zone_detect_switcher](const DetectionTypes target_type) {
+    std_msgs::UInt8 msg;
+    if (target_type == OBJECT_DETECT) {
+      msg.data = 0;
+      zone_detect_switcher.publish(msg);
+      msg.data = 1;
+      object_detect_switcher.publish(msg);
+      // ReSharper disable once CppExpressionWithoutSideEffects
+      ros::Duration(2).sleep();
+      return OBJECT_DETECT;
+    }
+    else {
+      msg.data = 0;
+      object_detect_switcher.publish(msg);
+      msg.data = 1;
+      zone_detect_switcher.publish(msg);
+      // ReSharper disable once CppExpressionWithoutSideEffects
+      ros::Duration(2).sleep();
+      return ZONE_DETECT;
+    }
+  };
   if (!ros::param::get("side_color", side_color)) {
     ROS_ERROR("side_color not set!");
     return 1;
@@ -143,7 +170,7 @@ int main(int argc, char* argv[]) {
         }
         ROS_DEBUG("Now angle is %f, limit is %f", nearest_object->angle, ANGLE_TOLERANCE_LIMIT(nearest_object->distance));
         if(abs(nearest_object->angle) < ANGLE_TOLERANCE_LIMIT(nearest_object->distance))break;
-        sendRotateTwist(nearest_object->angle > 0 ? 10 : -10);
+        sendRotateTwist(nearest_object->angle > 0 ? 30 : -30);
         // ReSharper disable once CppExpressionWithoutSideEffects
         ros::Duration(1.0).sleep();
         ROS_DEBUG("rotating ...");
@@ -210,12 +237,13 @@ int main(int argc, char* argv[]) {
     case 4: {
       ROS_INFO("try to cover object");
       std_msgs::UInt8 cover_angle;
-      cover_angle.data = 5;
+      cover_angle.data = 10;
       cover_pub.publish(cover_angle);
       cover_state = false;
       // ReSharper disable once CppDFALoopConditionNotUpdated
       ROS_SPINIF(!cover_state);
       ROS_INFO(title_msg, "back to security zone...");
+      switchDetectType(ZONE_DETECT);
       ROS_WARN("Debug OK!");
       return 0;
       eac_pkg::EacGoal goal_msg;

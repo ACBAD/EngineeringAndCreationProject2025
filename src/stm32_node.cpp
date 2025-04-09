@@ -15,10 +15,12 @@
 ros::Publisher rw_pub;
 ros::Publisher lw_pub;
 ros::Publisher cover_pub;
+ros::Publisher clog_pub;
 geometry_msgs::Twist global_twist;
 uint8_t cover_cmd = 195;
 double total_right = 0;
 double total_left = 0;
+bool is_left_clog = false, is_right_clog = false;
 
 class EasyDocument{
   rapidjson::Document d;
@@ -166,6 +168,8 @@ void sendAllArgs(const SerialDevice& sd) {
     total_right = stm32_data.getElementEasier<double>("R");
     total_left = stm32_data.getElementEasier<double>("L");
     cover_state.data = stm32_data.getElementEasier<bool>("cover_state");
+    bool is_right_clog = stm32_data.getElementEasier<bool>("is_right_clog");
+    bool is_left_clog = stm32_data.getElementEasier<bool>("is_left_clog");
   }catch (std::runtime_error& e) {
     ROS_WARN("Error in parsing: %s", e.what());
     return;
@@ -175,6 +179,12 @@ void sendAllArgs(const SerialDevice& sd) {
   L.data = static_cast<int32_t>(total_left);
   rw_pub.publish(R);
   lw_pub.publish(L);
+  std_msgs::UInt8 clog_msg;
+  clog_msg.data = 'N';
+  if(is_left_clog)clog_msg.data = 'L';
+  if(is_right_clog)clog_msg.data = 'R';
+  if(is_left_clog && is_right_clog)clog_msg.data = 'A';
+  clog_pub.publish(clog_msg);
   cover_pub.publish(cover_state);
 }
 
@@ -186,6 +196,7 @@ int main(int argc, char* argv[]) {
   rw_pub = node_handle.advertise<std_msgs::Int32>("/rwheel_ticks", 2);
   lw_pub = node_handle.advertise<std_msgs::Int32>("/lwheel_ticks", 2);
   cover_pub = node_handle.advertise<std_msgs::UInt8>("/cover_state", 2);
+  clog_pub = node_handle.advertise<std_msgs::UInt8>("clogging_state", 2);
   ros::Subscriber vel_sub = node_handle.subscribe("/cmd_vel", 2, updateMotorAction);
   ros::Subscriber cover_sub = node_handle.subscribe("/cover_cmd", 2, updateCoverAction);
   ros::Rate rate(30);
