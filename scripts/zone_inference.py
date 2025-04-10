@@ -40,10 +40,7 @@ if __name__ == "__main__":
     except KeyError:
         rospy.logfatal('Please set side_color!!!')
         exit(1)
-    if side_color == 0:
-        init_nn(nn_lib=f'{parent_dir}/libnn_red_zone.so', nn_nb=f'{parent_dir}/red_zone.nb')
-    else:
-        init_nn(nn_lib=f'{parent_dir}/libnn_blue_zone.so', nn_nb=f'{parent_dir}/blue_zone.nb')
+    init_nn(nn_lib=f'{parent_dir}/libnn_new_zone.so', nn_nb=f'{parent_dir}/new_zone.nb', cls_num=2)
     rospy.logwarn("zone_info_node started")
     pub = rospy.Publisher("/zone_data", ZoneInfo, queue_size=1)
     state_sub = rospy.Subscriber('/zond_detect_state', UInt8, set_running_state)
@@ -52,6 +49,8 @@ if __name__ == "__main__":
         if not running_state:
             continue
         read_state, cap_img = cap.read()
+        if not side_color == 0:
+            cap_img = cv2.bitwise_not(cap_img)
         if not read_state:
             rospy.logwarn("Cam read failed")
             continue
@@ -68,7 +67,7 @@ if __name__ == "__main__":
         # Start fill locations data
         classes = cast(np.ndarray, classes)
         for box, color_num in zip(boxes, classes):
-            if color_num != side_color:
+            if color_num != 1:
                 continue
             x1, y1, x2, y2 = box
             x1 = limitValue(x1)
@@ -84,6 +83,7 @@ if __name__ == "__main__":
             distance = center_y * DISTANCE_SCALE
             zone_msg.angle = angle
             zone_msg.distance = IMAGE_HEIGHT - distance
+            break
         pub.publish(zone_msg)
         ips += 1
         if time.time() - last_log_time >= 1:
