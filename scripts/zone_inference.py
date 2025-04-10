@@ -60,6 +60,8 @@ if __name__ == "__main__":
 
         zone_msg = ZoneInfo()
         zone_msg.stamp = rospy.Time.now()
+        zone_msg.angle = 0
+        zone_msg.distance = 0
         cast(np.ndarray, boxes)
         if boxes is None:
             boxes = np.zeros(shape=(0, 4))

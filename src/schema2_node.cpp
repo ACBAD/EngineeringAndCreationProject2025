@@ -37,6 +37,7 @@ enum DetectionTypes {
   OBJECT_DETECT,
   ZONE_DETECT
 };
+DetectionTypes detection_type = OBJECT_DETECT;
 
 /**
  *
@@ -107,6 +108,7 @@ int main(int argc, char* argv[]) {
   ros::Publisher zone_detect_switcher = node_handle.advertise<std_msgs::UInt8>("/zone_detect_state", 1);
   auto switchDetectType = [object_detect_switcher, zone_detect_switcher](const DetectionTypes target_type) {
     std_msgs::UInt8 msg;
+    if (target_type == detection_type)return target_type;
     if (target_type == OBJECT_DETECT) {
       msg.data = 0;
       zone_detect_switcher.publish(msg);
@@ -114,6 +116,7 @@ int main(int argc, char* argv[]) {
       object_detect_switcher.publish(msg);
       // ReSharper disable once CppExpressionWithoutSideEffects
       ros::Duration(2).sleep();
+      detection_type = OBJECT_DETECT;
       return OBJECT_DETECT;
     }
     else {
@@ -123,6 +126,7 @@ int main(int argc, char* argv[]) {
       zone_detect_switcher.publish(msg);
       // ReSharper disable once CppExpressionWithoutSideEffects
       ros::Duration(2).sleep();
+      detection_type = ZONE_DETECT;
       return ZONE_DETECT;
     }
   };
@@ -140,6 +144,8 @@ int main(int argc, char* argv[]) {
   while (sys_state != 0 && ros::ok()) {
     switch (sys_state) {
     case 1: {
+      ROS_INFO("detect mode switch to object");
+      switchDetectType(OBJECT_DETECT);
       ROS_SPINIF(!checkInfoAviliable(object_infos.stamp));
       if (object_infos.data.size() > 0) {
         sys_state++;
@@ -176,26 +182,11 @@ int main(int argc, char* argv[]) {
         ROS_DEBUG("rotating ...");
       }
       ROS_INFO(title_msg, "aligning ok");
-      // 检查物体是否仍available
-      ROS_SPINIF(!checkInfoAviliable(object_infos.stamp));
-
-      // 获取最新的最近物体信息
-      try {nearest_object = findNearestObject();}
-      catch (const std::out_of_range &e) {
-        ROS_WARN(title_msg, "object lost!!!");
-        sys_state = 1;
-        break;
-      }
-      // 如果物体已进入视野中央，进入下一case
-      if (abs(nearest_object->angle) < ANGLE_TOLERANCE_LIMIT(nearest_object->distance)) {
-        sys_state++;
-        break;
-      }
-      ROS_WARN(title_msg, "aligning failed! return to case 2");
+      sys_state++;
       break;
     }
     case 3: {
-      ROS_INFO(title_msg, "aligning OK, try to reach object");
+      ROS_INFO(title_msg, "try to reach object");
       // 获取最近物体
       auto nearest_object = object_infos.data.begin();
       try {nearest_object = findNearestObject();}
@@ -219,50 +210,93 @@ int main(int argc, char* argv[]) {
       ROS_SPINIF(!checkReachObjectState());
       ROS_WARN(title_msg, "object coverable, stop");
       sendStraightTwist(0);
-
-      while (checkInfoAviliable(object_infos.stamp)) {
-        // ReSharper disable once CppTooWideScope
-        ROS_DEBUG("against_color is %d, obj distance is %f, obj color is %d",
-          agninst_color, object_infos.data[0].distance, object_infos.data[0].color);
-        if (checkReachObjectState()) {
-          sys_state++;
-          break;
-        }
-        ROS_WARN(title_msg, "reach failed, back to case 1");
-        sys_state = 1;
+      ROS_SPINIF(!checkInfoAviliable(object_infos.stamp));
+      if (checkReachObjectState()) {
+        sys_state++;
         break;
       }
+      ROS_WARN(title_msg, "reach failed, back to case 1");
+      sys_state = 1;
       break;
     }
     case 4: {
-      ROS_INFO("try to cover object");
+      ROS_INFO(title_msg, "try to cover object");
       std_msgs::UInt8 cover_angle;
       cover_angle.data = 10;
       cover_pub.publish(cover_angle);
       cover_state = false;
       // ReSharper disable once CppDFALoopConditionNotUpdated
       ROS_SPINIF(!cover_state);
-      ROS_INFO(title_msg, "back to security zone...");
-      switchDetectType(ZONE_DETECT);
-      ROS_WARN("Debug OK!");
-      return 0;
-      eac_pkg::EacGoal goal_msg;
-      goal_msg.request.goal_index = SECURITY_ZONE;
-      goal_msg.request.timeout = 30;
-      if(navi_client.call(goal_msg) == false || goal_msg.response.state == false)
-        ROS_WARN(title_msg, "error ouccred in reaching security zone");
+      ROS_INFO(title_msg, "object coverd! check cover state");
+      ROS_SPINIF(!checkInfoAviliable(object_infos.stamp));
+      if(object_infos.data.size() == 0) {
+        ROS_WARN(title_msg, "cover nothing !");
+        sys_state = 1;
+        break;
+      }
+      ROS_INFO(title_msg, "objects ok! back to security zone...");
       sys_state++;
       break;
     }
     case 5: {
+      ROS_INFO(title_msg, "switch detect mode to zone");
+      switchDetectType(ZONE_DETECT);
+      ROS_SPINIF(!checkInfoAviliable(zone_info.stamp));
+      if(zone_info.distance == 0 && zone_info.angle == 0) {
+        ROS_INFO(title_msg, "can not detect zone, rotating...");
+        sendRotateTwist();
+        break;
+      }
+      ROS_INFO(title_msg, "zone detected! next");
+      sys_state++;
+      break;
+    }
+    case 6: {
+      while (abs(zone_info.angle) > ANGLE_TOLERANCE_LIMIT(zone_info.distance)) {
+        auto last_stamp = zone_info.stamp;
+        ROS_SPINIF(!checkInfoAviliable(zone_info.stamp));
+        ROS_DEBUG("Now stamp is %f, last stamp is %f", zone_info.stamp.toSec(), zone_info.stamp.toSec());
+        if(zone_info.angle == 0 && zone_info.distance == 0) {
+          ROS_WARN(title_msg, "zone lost! back to last case");
+          sys_state--;
+          break;
+        }
+        ROS_DEBUG("Now angle is %f, limit is %f", zone_info.angle, ANGLE_TOLERANCE_LIMIT(zone_info.distance));
+        if(abs(zone_info.angle) < ANGLE_TOLERANCE_LIMIT(zone_info.distance))break;
+        sendRotateTwist(zone_info.angle > 0 ? 30 : -30);
+        // ReSharper disable once CppExpressionWithoutSideEffects
+        ros::Duration(1.0).sleep();
+        ROS_DEBUG("rotating ...");
+      }
+      ROS_INFO(title_msg, "aligning ok");
+      sys_state++;
+      break;
+    }
+    case 7: {
+      ROS_INFO(title_msg, "reaching to zone");
+      sendStraightTwist(0.2);
+      ROS_INFO(title_msg, "going for zone");
+      while (zone_info.distance > REACH_ZONE_DISTANCE) {
+        ROS_SPINIF(!checkInfoAviliable(zone_info.stamp));
+        if (zone_info.distance < REACH_ZONE_DISTANCE)break;
+      }
+      if(zone_info.angle == 0 && zone_info.distance == 0) {
+        ROS_WARN("reach failed!");
+        sys_state = 5;
+        break;
+      }
+      ROS_INFO(title_msg, "reach zone");
+      break;
+    }
+    case 8: {
       ROS_INFO(title_msg, "releasing objects...");
       std_msgs::UInt8 cover_angle;
       cover_angle.data = 0;
       cover_pub.publish(cover_angle);
       cover_state = false;
       // ReSharper disable once CppDFALoopConditionNotUpdated
-      while (!cover_state){ros::spinOnce();}
-      sys_state = 0;
+      ROS_SPINIF(!cover_state);
+      sys_state = 1;
       break;
     }
     default: {
