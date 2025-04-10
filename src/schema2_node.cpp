@@ -170,7 +170,7 @@ int main(int argc, char* argv[]) {
         ROS_DEBUG("Now stamp is %f, last stamp is %f", object_infos.stamp.toSec(), last_stamp.toSec());
         try {nearest_object = findNearestObject();}
         catch (const std::out_of_range &e) {
-          ROS_WARN(title_msg, "object lost!!!");
+          ROS_WARN(title_msg, e.what());
           sys_state = 1;
           break;
         }
@@ -187,14 +187,6 @@ int main(int argc, char* argv[]) {
     }
     case 3: {
       ROS_INFO(title_msg, "try to reach object");
-      // 获取最近物体
-      auto nearest_object = object_infos.data.begin();
-      try {nearest_object = findNearestObject();}
-      catch (const std::out_of_range &e) {
-        ROS_WARN(title_msg, "object lost!!!");
-        sys_state = 1;
-        break;
-      }
       sendStraightTwist(0.2);
       ROS_WARN(title_msg, "go straight for object");
       // 定义检查物体是否到达的函数
@@ -255,7 +247,7 @@ int main(int argc, char* argv[]) {
       while (abs(zone_info.angle) > ANGLE_TOLERANCE_LIMIT(zone_info.distance)) {
         auto last_stamp = zone_info.stamp;
         ROS_SPINIF(!checkInfoAviliable(zone_info.stamp));
-        ROS_DEBUG("Now stamp is %f, last stamp is %f", zone_info.stamp.toSec(), zone_info.stamp.toSec());
+        ROS_DEBUG("Now stamp is %f, last stamp is %f", zone_info.stamp.toSec(), last_stamp.toSec());
         if(zone_info.angle == 0 && zone_info.distance == 0) {
           ROS_WARN(title_msg, "zone lost! back to last case");
           sys_state--;
