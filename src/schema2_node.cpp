@@ -66,7 +66,7 @@ int sendRotateTwist(const double angle = 10, const double palstance = 0.5) {
  */
 geometry_msgs::Twist sendStraightTwist(const double distance_velocity, const double velocity = 0) {
   geometry_msgs::Twist straight_cmd;
-  straight_cmd.linear.x = velocity == 0 ? distance_velocity : 0.5;
+  straight_cmd.linear.x = velocity == 0 ? distance_velocity : velocity;
   twist_pub.publish(straight_cmd);
   straight_cmd.linear.x = 0;
   if (velocity == 0)return straight_cmd;
@@ -139,7 +139,7 @@ int main(int argc, char* argv[]) {
   ROS_SPINIF(!trigger);
   ROS_WARN("Triggered!!!");
   agninst_color = side_color == SIDE_RED ? SIDE_BLUE : SIDE_RED;
-  uint8_t sys_state = 1;
+  uint8_t sys_state = 5;
   constexpr char title_msg[] = "schema2 acting: %s";
   while (sys_state != 0 && ros::ok()) {
     switch (sys_state) {
@@ -278,6 +278,8 @@ int main(int argc, char* argv[]) {
         break;
       }
       ROS_INFO(title_msg, "reach zone");
+      ROS_INFO("Debug OK");
+      return 0;
       break;
     }
     case 8: {
@@ -288,6 +290,7 @@ int main(int argc, char* argv[]) {
       cover_state = false;
       // ReSharper disable once CppDFALoopConditionNotUpdated
       ROS_SPINIF(!cover_state);
+      sendStraightTwist(-1, -0.2);
       sys_state = 1;
       break;
     }
