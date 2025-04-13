@@ -48,6 +48,7 @@ if __name__ == "__main__":
     pub = rospy.Publisher("/objects_data", ObjectInfoArray, queue_size=1)
     state_sub = rospy.Subscriber('/object_detect_state', UInt8, set_running_state)
     cap = cv2.VideoCapture(0)
+    cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
     while not rospy.is_shutdown():
         if not running_flag:
             continue

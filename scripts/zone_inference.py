@@ -45,6 +45,7 @@ if __name__ == "__main__":
     pub = rospy.Publisher("/zone_data", ZoneInfo, queue_size=1)
     state_sub = rospy.Subscriber('/zond_detect_state', UInt8, set_running_state)
     cap = cv2.VideoCapture(1)
+    cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
     while not rospy.is_shutdown():
         if not running_state:
             continue
