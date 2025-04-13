@@ -43,7 +43,7 @@ if __name__ == "__main__":
     init_nn(nn_lib=f'{parent_dir}/libnn_new_zone.so', nn_nb=f'{parent_dir}/new_zone.nb', cls_num=2)
     rospy.logwarn("zone_info_node started")
     pub = rospy.Publisher("/zone_data", ZoneInfo, queue_size=1)
-    state_sub = rospy.Subscriber('/zond_detect_state', UInt8, set_running_state)
+    state_sub = rospy.Subscriber('/zone_detect_state', UInt8, set_running_state)
     cap = cv2.VideoCapture(1)
     cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
     while not rospy.is_shutdown():
