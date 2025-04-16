@@ -204,6 +204,7 @@ int main(int argc, char* argv[]) {
       break;
     }
     case 5: {
+
       ROS_SPINIF(!checkInfoAviliable(zone_info.stamp));
       if(zone_info.distance == 0 && zone_info.angle == 0) {
         ROS_INFO(title_msg, "can not detect zone, rotating...");
