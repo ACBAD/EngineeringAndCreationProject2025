@@ -165,7 +165,7 @@ if __name__ == '__main__':
             pub.publish(zone_msg)
             continue
         color, center, size, rect_info = detect_result
-        if int(color) != side_color:
+        if color.value != side_color:
             pub.publish(zone_msg)
             continue
         angle = (IMAGE_WIDTH / 2 - center[0]) * ANGLE_SCALE
