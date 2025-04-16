@@ -29,9 +29,7 @@ void objectCallback(const eac_pkg::ObjectInfoArray& msg) {
     [](const eac_pkg::ObjectInfo& obj) {return obj.color != agninst_color;});
 }
 
-void zoneCallback(const eac_pkg::ZoneInfo& msg) {
-  zone_info = msg;
-}
+void zoneCallback(const eac_pkg::ZoneInfo& msg) {zone_info = msg;}
 
 enum DetectionTypes {
   OBJECT_DETECT,
@@ -211,6 +209,7 @@ int main(int argc, char* argv[]) {
         sendRotateTwist();
         break;
       }
+      ROS_DEBUG("Now zone, distance is %f, angle is %f", zone_info.distance, zone_info.distance);
       ROS_INFO(title_msg, "zone detected! next");
       sys_state++;
       break;
