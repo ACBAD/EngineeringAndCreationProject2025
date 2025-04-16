@@ -105,32 +105,6 @@ int main(int argc, char* argv[]) {
   ros::Subscriber cover_sub = node_handle.subscribe("/cover_state", 2, coverStateCallback);
   twist_pub = node_handle.advertise<geometry_msgs::Twist>("/cmd_vel", 2);
   ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Debug);
-  ros::Publisher object_detect_switcher = node_handle.advertise<std_msgs::UInt8>("/object_detect_state", 1);
-  ros::Publisher zone_detect_switcher = node_handle.advertise<std_msgs::UInt8>("/zone_detect_state", 1);
-  auto switchDetectType = [object_detect_switcher, zone_detect_switcher](const DetectionTypes target_type) {
-    std_msgs::UInt8 msg;
-    if (target_type == detection_type)return target_type;
-    if (target_type == OBJECT_DETECT) {
-      msg.data = 0;
-      zone_detect_switcher.publish(msg);
-      msg.data = 1;
-      object_detect_switcher.publish(msg);
-      // ReSharper disable once CppExpressionWithoutSideEffects
-      ros::Duration(2).sleep();
-      detection_type = OBJECT_DETECT;
-      return OBJECT_DETECT;
-    }
-    else {
-      msg.data = 0;
-      object_detect_switcher.publish(msg);
-      msg.data = 1;
-      zone_detect_switcher.publish(msg);
-      // ReSharper disable once CppExpressionWithoutSideEffects
-      ros::Duration(2).sleep();
-      detection_type = ZONE_DETECT;
-      return ZONE_DETECT;
-    }
-  };
   if (!ros::param::get("side_color", side_color)) {
     ROS_ERROR("side_color not set!");
     return 1;
@@ -145,8 +119,6 @@ int main(int argc, char* argv[]) {
   while (sys_state != 0 && ros::ok()) {
     switch (sys_state) {
     case 1: {
-      ROS_INFO("detect mode switch to object");
-      switchDetectType(OBJECT_DETECT);
       ROS_SPINIF(!checkInfoAviliable(object_infos.stamp));
       if (object_infos.data.size() > 0) {
         sys_state++;
@@ -232,8 +204,6 @@ int main(int argc, char* argv[]) {
       break;
     }
     case 5: {
-      ROS_INFO(title_msg, "switch detect mode to zone");
-      switchDetectType(ZONE_DETECT);
       ROS_SPINIF(!checkInfoAviliable(zone_info.stamp));
       if(zone_info.distance == 0 && zone_info.angle == 0) {
         ROS_INFO(title_msg, "can not detect zone, rotating...");
