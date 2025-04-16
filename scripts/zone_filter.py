@@ -152,6 +152,7 @@ if __name__ == '__main__':
         IMAGE_HEIGHT, IMAGE_WIDTH = cap_img.shape[:2]
         if IMAGE_HEIGHT < crop_height:
             raise ValueError(f'Image height is {IMAGE_HEIGHT}, can not crop')
+        IMAGE_HEIGHT = crop_height
         zone_msg = ZoneInfo()
         zone_msg.stamp = rospy.Time.now()
         zone_msg.angle = 0
