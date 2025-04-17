@@ -270,7 +270,7 @@ int main(int argc, char* argv[]) {
     case 8: {
       ROS_INFO(title_msg, "releasing objects...");
       std_msgs::UInt8 cover_angle;
-      cover_angle.data = 195
+      cover_angle.data = 195;
       cover_pub.publish(cover_angle);
       cover_state = false;
       // ReSharper disable once CppDFALoopConditionNotUpdated
