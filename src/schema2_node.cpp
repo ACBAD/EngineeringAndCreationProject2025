@@ -143,6 +143,8 @@ int main(int argc, char* argv[]) {
 
       // 顿挫转圈以将最近物体置于视野中央
       while (abs(nearest_object->angle) > ANGLE_TOLERANCE_LIMIT(nearest_object->distance)) {
+        // ReSharper disable once CppExpressionWithoutSideEffects
+        ros::Duration(1.0).sleep();
         auto last_stamp = object_infos.stamp;
         ROS_SPINIF(!checkInfoAviliable(object_infos.stamp));
         ROS_DEBUG("Now stamp is %f, last stamp is %f", object_infos.stamp.toSec(), last_stamp.toSec());
@@ -157,6 +159,7 @@ int main(int argc, char* argv[]) {
         sendRotateTwist(nearest_object->angle > 0 ? 20 : -20);
         // ReSharper disable once CppExpressionWithoutSideEffects
         ros::Duration(1.0).sleep();
+        sendRotateTwist(0);
         ROS_DEBUG("rotating ...");
       }
       if(sys_state == 1)break;
