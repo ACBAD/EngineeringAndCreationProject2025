@@ -51,7 +51,7 @@ DetectionTypes detection_type = OBJECT_DETECT;
  */
 int sendRotateTwist(const double angle = 10, const double palstance = 0.5) {
   const double radian = angle * (pi / 180.0);
-  const double wait_sec = radian / palstance;
+  const double wait_sec = abs(radian / palstance);
   geometry_msgs::Twist rotate_cmd;
   rotate_cmd.angular.z = palstance;
   twist_pub.publish(rotate_cmd);
@@ -154,7 +154,7 @@ int main(int argc, char* argv[]) {
         }
         ROS_DEBUG("Now angle is %f, limit is %f", nearest_object->angle, ANGLE_TOLERANCE_LIMIT(nearest_object->distance));
         if(abs(nearest_object->angle) < ANGLE_TOLERANCE_LIMIT(nearest_object->distance))break;
-        sendRotateTwist(nearest_object->angle > 0 ? 30 : -30);
+        sendRotateTwist(nearest_object->angle > 0 ? 20 : -20);
         // ReSharper disable once CppExpressionWithoutSideEffects
         ros::Duration(1.0).sleep();
         ROS_DEBUG("rotating ...");
