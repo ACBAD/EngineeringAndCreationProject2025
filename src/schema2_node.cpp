@@ -222,7 +222,7 @@ int main(int argc, char* argv[]) {
       break;
     }
     case 6: {
-      while (abs(zone_info.angle) > ANGLE_TOLERANCE_LIMIT(zone_info.distance)) {
+      while (abs(zone_info.angle) > ZONE_ANGLE_LIMIT) {
         auto last_stamp = zone_info.stamp;
         ROS_SPINIF(!checkInfoAviliable(zone_info.stamp));
         ROS_DEBUG("Now stamp is %f, last stamp is %f", zone_info.stamp.toSec(), last_stamp.toSec());
@@ -232,7 +232,7 @@ int main(int argc, char* argv[]) {
           break;
         }
         ROS_DEBUG("Now angle is %f, limit is %f", zone_info.angle, ANGLE_TOLERANCE_LIMIT(zone_info.distance));
-        if(abs(zone_info.angle) < ANGLE_TOLERANCE_LIMIT(zone_info.distance))break;
+        if(abs(zone_info.angle) < ZONE_ANGLE_LIMIT)break;
         sendRotateTwist(zone_info.angle > 0 ? 30 : -30);
         // ReSharper disable once CppExpressionWithoutSideEffects
         ros::Duration(1.0).sleep();
