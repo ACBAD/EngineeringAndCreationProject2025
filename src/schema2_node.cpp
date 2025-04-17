@@ -239,6 +239,7 @@ int main(int argc, char* argv[]) {
         ros::Duration(1.0).sleep();
         ROS_DEBUG("rotating ...");
       }
+      if(sys_state == 5)break;
       ROS_INFO(title_msg, "aligning ok");
       sys_state++;
       break;
