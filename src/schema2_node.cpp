@@ -209,7 +209,7 @@ int main(int argc, char* argv[]) {
         sendRotateTwist();
         break;
       }
-      ROS_DEBUG("Now zone, distance is %f, angle is %f", zone_info.distance, zone_info.distance);
+      ROS_DEBUG("Now zone, distance is %f, angle is %f", zone_info.distance, zone_info.angle);
       ROS_INFO(title_msg, "zone detected! next");
       sys_state++;
       break;

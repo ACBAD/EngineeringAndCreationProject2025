@@ -4,7 +4,6 @@ pass
 import enum
 import cv2
 import numpy as np
-from numpy.matrixlib.defmatrix import N
 import rospy
 from eac_pkg.msg import ZoneInfo
 
@@ -155,6 +154,7 @@ if __name__ == '__main__':
         IMAGE_HEIGHT, IMAGE_WIDTH = cap_img.shape[:2]
         if IMAGE_HEIGHT < crop_height:
             raise ValueError(f'Image height is {IMAGE_HEIGHT}, can not crop')
+        cv2.resize(cap_img, (IMAGE_WIDTH, IMAGE_HEIGHT))
         IMAGE_HEIGHT = crop_height
         zone_msg = ZoneInfo()
         zone_msg.stamp = rospy.Time.now()
