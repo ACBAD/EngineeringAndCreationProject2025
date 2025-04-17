@@ -11,7 +11,7 @@ from ksnn.api import KSNN
 from ksnn.types import *
 import cv2 as cv
 import time
-from zone_filter import createColorMask, createConvexHullContour, Color, morphologyProcess
+from zone_filter import ifPointInZone
 from eac_cv import rect_normalize
 
 GRID0 = 20
@@ -225,9 +225,8 @@ def inference(input_image, do_filter=False):
             filtered_classes.append(class_id[None])
             continue
         IMAGE_HEIGHT, IMAGE_WIDTH = input_image.shape[:2]
-        contour = createConvexHullContour(morphologyProcess(createColorMask(input_image, Color.PURPLE), kernel_shape=10), connect_radius=150)
         left, top, right, bottom = rect_normalize((IMAGE_HEIGHT, IMAGE_WIDTH), box)
-        if cv.pointPolygonTest(contour, ((right - left) // 2, (bottom - top) // 2), True) >= 0:
+        if not ifPointInZone(input_image, ((right - left) // 2, (bottom - top) // 2)):
             filtered_boxes.append(box[None])
             filtered_scores.append(score[None])
             filtered_classes.append(class_id[None])
