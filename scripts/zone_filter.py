@@ -169,7 +169,7 @@ def rosRun():
         if not read_state:
             rospy.logwarn("Cam read failed")
             continue
-        crop_height = 270
+        crop_height = 350
         IMAGE_HEIGHT, IMAGE_WIDTH = cap_img.shape[:2]
         if IMAGE_HEIGHT < crop_height:
             raise ValueError(f'Image height is {IMAGE_HEIGHT}, can not crop')
