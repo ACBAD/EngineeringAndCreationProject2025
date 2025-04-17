@@ -12,6 +12,7 @@
 
 uint8_t trigger = 0;
 bool cover_state = false;
+bool clog_state = false;
 eac_pkg::ObjectInfoArray object_infos;
 eac_pkg::ZoneInfo zone_info;
 int side_color;
@@ -27,6 +28,11 @@ void objectCallback(const eac_pkg::ObjectInfoArray& msg) {
   object_infos.data.resize(0);
   std::copy_if(msg.data.begin(), msg.data.end(), std::back_inserter(object_infos.data),
     [](const eac_pkg::ObjectInfo& obj) {return obj.color != agninst_color;});
+}
+
+void clogCallback(const std_msgs::UInt8& msg) {
+  if(msg.data == 'N')clog_state = false;
+  else clog_state = true;
 }
 
 void zoneCallback(const eac_pkg::ZoneInfo& msg) {zone_info = msg;}
@@ -98,6 +104,7 @@ int main(int argc, char* argv[]) {
   ros::Subscriber trigger_sub = node_handle.subscribe("/schema2_cmd", 2, nodeCallback);
   ros::Subscriber object_sub = node_handle.subscribe("/objects_data", 1, objectCallback);
   ros::Subscriber zone_sub = node_handle.subscribe("/zone_data", 1, zoneCallback);
+  ros::Subscriber clog_sub = node_handle.subscribe("/clogging_state", 1, clogCallback);
   ros::ServiceClient navi_client = node_handle.serviceClient<eac_pkg::EacGoal>("navigation");
   const ros::Publisher cover_pub = node_handle.advertise<std_msgs::UInt8>("/cover_cmd", 2);
   ros::Subscriber cover_sub = node_handle.subscribe("/cover_state", 2, coverStateCallback);
@@ -239,9 +246,15 @@ int main(int argc, char* argv[]) {
       ROS_INFO(title_msg, "reaching to zone");
       sendStraightTwist(0.2);
       ROS_INFO(title_msg, "going for zone");
-      while (zone_info.distance > REACH_ZONE_DISTANCE) {
+      // 旧逻辑，通过视觉判断是否到达安全区
+      // while (zone_info.distance > REACH_ZONE_DISTANCE) {
+      //   ROS_SPINIF(!checkInfoAviliable(zone_info.stamp));
+      //   if (zone_info.distance < REACH_ZONE_DISTANCE)break;
+      // }
+      // 新逻辑，通过堵转判断是否到达安全区
+      while (!clog_state) {
         ROS_SPINIF(!checkInfoAviliable(zone_info.stamp));
-        if (zone_info.distance < REACH_ZONE_DISTANCE)break;
+        if (zone_info.distance == 0)break;
       }
       if(zone_info.angle == 0 && zone_info.distance == 0) {
         ROS_WARN("reach failed!");
@@ -249,6 +262,7 @@ int main(int argc, char* argv[]) {
         break;
       }
       ROS_INFO(title_msg, "reach zone");
+      sendStraightTwist(0);
       ROS_INFO("Debug OK");
       return 0;
       break;
