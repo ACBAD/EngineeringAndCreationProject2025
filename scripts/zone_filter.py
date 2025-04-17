@@ -1,15 +1,15 @@
-#!/usr/bin/env python3
-#coding=utf-8
-pass
+# !/usr/bin/env python3
+# coding=utf-8
+
 import enum
+import os
 import cv2
 import numpy as np
-import rospy
-from eac_pkg.msg import ZoneInfo
+
 
 # 定义紫色的HSV范围（H值需要根据实际情况调整）
-lower_purple = np.array([115, 50, 50])   # H最小值，S最小值，V最小值
-upper_purple = np.array([165, 230, 230])  # H最大值，S最大值，V最大值
+lower_purple = np.array([115, 50, 35])  # H最小值，S最小值，V最小值
+upper_purple = np.array([150, 230, 230])  # H最大值，S最大值，V最大值
 
 lower_red1 = np.array([0, 80, 70])
 upper_red1 = np.array([10, 230, 230])
@@ -72,28 +72,45 @@ def calculateRatio(img, mask, color: Color):
     return mask_pixels / total_pixels
 
 
-def createContourMask(mask, contour):
-    hull_mask = np.zeros_like(mask)
-    cv2.drawContours(hull_mask, [contour], -1, [255], -1)  # 填充白色凸包区域
-    return hull_mask
+def createContourMask(mask, contours):
+    contour_mask = np.zeros_like(mask)
+    cv2.drawContours(contour_mask, [contours] if not isinstance(contours, list) else contours, -1, [255], -1)  # 填充白色凸包区域
+    return contour_mask
 
 
-def createConvexHullContour(mask):
-    contours, hierarchy = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+def createConvexHullContour(mask, connect_radius=50, min_area=80):
+    contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    contours = [cnt for cnt in contours if cv2.contourArea(cnt) >= min_area]
     if not contours:
         return None
-    # 找到面积最大的连通区域
+    # 找出最大轮廓
     max_contour = max(contours, key=cv2.contourArea)
-    # 计算凸包（convex hull）补全为凸多边形
-    hull = cv2.convexHull(max_contour)
-    # 创建凸包区域的mask
-    return hull
+    max_hull = cv2.convexHull(max_contour)
+    # 用于合并的所有点集合
+    all_points = list(max_hull.reshape(-1, 2))  # 初始是最大凸包的点
+    for cnt in contours:
+        if np.array_equal(cnt, max_contour):
+            continue
+        # 找出该轮廓上离最大凸包最近的点
+        min_dist = float('inf')
+        for point in cnt:
+            pt = tuple(float(v) for v in point[0])  # 转为浮点数 (x, y)
+            dist = cv2.pointPolygonTest(max_hull, pt, True)
+            abs_dist = abs(dist)
+            if abs_dist < min_dist:
+                min_dist = abs_dist
+        if min_dist <= connect_radius:
+            all_points.extend(cnt.reshape(-1, 2))  # 合并所有点
+    # 重新计算合并后的总凸包
+    all_points_np = np.array(all_points).reshape(-1, 1, 2).astype(np.int32)
+    final_hull = cv2.convexHull(all_points_np)
+    return final_hull
 
 
 def detectZone(img):
     hsv_img = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     purple_mask = morphologyProcess(createColorMask(hsv_img, Color.PURPLE, is_hsv=True), kernel_shape=10)
-    convex_hull_contour = createConvexHullContour(purple_mask)
+    convex_hull_contour = createConvexHullContour(purple_mask, connect_radius=150)
     if convex_hull_contour is None:
         return None
     convex_hull_mask = createContourMask(purple_mask, convex_hull_contour)
@@ -110,7 +127,7 @@ def detectZone(img):
     elif blue_ratio < red_ratio:
         zone_color = Color.RED
     else:
-        zone_color = Color.BLUE
+        zone_color = Color.PURPLE
     zone_center = (rect_x + rect_w // 2, rect_y + rect_h // 2)
     # zone_size = np.sqrt(rect_w ** 2 + rect_h ** 2)
     zone_size = (rect_w, rect_h)
@@ -129,10 +146,12 @@ def drawZone(img, rect_color, rect_info):
     cv2.rectangle(img, (rect_info[0], rect_info[1]),
                   (rect_info[0] + rect_info[2], rect_info[1] + rect_info[3]), (0, 255, 0), 2)
 
-ANGLE_SCALE = 1
-DISTANCE_SCALE = 1
 
-if __name__ == '__main__':
+def rosRun():
+    ANGLE_SCALE = 1
+    DISTANCE_SCALE = 1
+    import rospy
+    from eac_pkg.msg import ZoneInfo
     rospy.init_node('zone_info_node')
     try:
         side_color = rospy.get_param('side_color')
@@ -173,3 +192,24 @@ if __name__ == '__main__':
         distance = center[1] * DISTANCE_SCALE
         zone_msg.distance = IMAGE_HEIGHT - distance
         pub.publish(zone_msg)
+
+
+def testMain():
+    from hsv_window import ClickHSVWindow
+    for file in os.listdir('data'):
+        image = cv2.imread(os.path.join('data', file))
+        image = cv2.resize(image, (960, 540))
+        purple_mask = morphologyProcess(createColorMask(image, Color.PURPLE), kernel_shape=10)
+        convex_hull_contour = createConvexHullContour(purple_mask, connect_radius=150)
+        convex_hull_mask = createContourMask(purple_mask, convex_hull_contour)
+        ClickHSVWindow(f'{file}: image', image)
+        cv2.imshow(f'{file}: convex_hull_mask', convex_hull_mask)
+        try:
+            cv2.waitKey(0)
+        except KeyboardInterrupt:
+            break
+        cv2.destroyAllWindows()
+        ClickHSVWindow.close_all()
+
+if __name__ == '__main__':
+    rosRun()
