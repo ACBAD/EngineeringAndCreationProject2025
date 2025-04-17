@@ -119,7 +119,7 @@ int main(int argc, char* argv[]) {
   ROS_SPINIF(!trigger);
   ROS_WARN("Triggered!!!");
   agninst_color = side_color == SIDE_RED ? SIDE_BLUE : SIDE_RED;
-  uint8_t sys_state = 5;
+  uint8_t sys_state = 1;
   constexpr char title_msg[] = "schema2 acting: %s";
   while (sys_state != 0 && ros::ok()) {
     switch (sys_state) {
@@ -263,8 +263,6 @@ int main(int argc, char* argv[]) {
       }
       ROS_INFO(title_msg, "reach zone");
       sendStraightTwist(0);
-      ROS_INFO("Debug OK");
-      return 0;
       break;
     }
     case 8: {
