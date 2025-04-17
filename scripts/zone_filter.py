@@ -1,5 +1,5 @@
-#!/usr/bin/env python3
-#coding=utf-8
+# !/usr/bin/env python3
+# coding=utf-8
 
 import enum
 import os
@@ -107,6 +107,15 @@ def createConvexHullContour(mask, connect_radius=50, min_area=80):
     return final_hull
 
 
+def ifPointInZone(img, point):
+    hsv_img = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+    purple_mask = morphologyProcess(createColorMask(hsv_img, Color.PURPLE, is_hsv=True), kernel_shape=10)
+    convex_hull_contour = createConvexHullContour(purple_mask, connect_radius=150)
+    if cv2.pointPolygonTest(convex_hull_contour, point, True) >= 0:
+        return True
+    return False
+
+
 def detectZone(img):
     hsv_img = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     purple_mask = morphologyProcess(createColorMask(hsv_img, Color.PURPLE, is_hsv=True), kernel_shape=10)
@@ -169,7 +178,7 @@ def rosRun():
         if not read_state:
             rospy.logwarn("Cam read failed")
             continue
-        crop_height = 350
+        crop_height = 270
         IMAGE_HEIGHT, IMAGE_WIDTH = cap_img.shape[:2]
         if IMAGE_HEIGHT < crop_height:
             raise ValueError(f'Image height is {IMAGE_HEIGHT}, can not crop')
@@ -195,6 +204,9 @@ def rosRun():
 
 
 def testMain():
+    def show_if_in(gimage, x, y):
+        print(f'Point: {x}, {y}')
+        print(ifPointInZone(gimage, (x, y)))
     from hsv_window import ClickHSVWindow
     for file in os.listdir('data'):
         image = cv2.imread(os.path.join('data', file))
@@ -202,7 +214,7 @@ def testMain():
         purple_mask = morphologyProcess(createColorMask(image, Color.PURPLE), kernel_shape=10)
         convex_hull_contour = createConvexHullContour(purple_mask, connect_radius=150)
         convex_hull_mask = createContourMask(purple_mask, convex_hull_contour)
-        ClickHSVWindow(f'{file}: image', image)
+        ClickHSVWindow(f'{file}: image', image, custom_callback=show_if_in)
         cv2.imshow(f'{file}: convex_hull_mask', convex_hull_mask)
         try:
             cv2.waitKey(0)

@@ -217,6 +217,9 @@ def inference(input_image, do_filter=False):
     filtered_classes = []
     for box, score, class_id in zip(boxes, scores, classes):
         if class_id not in (0, 2):
+            if class_id == 1:
+                if score < 0.8:
+                    continue
             filtered_boxes.append(box[None])
             filtered_scores.append(score[None])
             filtered_classes.append(class_id[None])
