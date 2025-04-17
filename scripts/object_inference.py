@@ -2,7 +2,7 @@
 #coding=utf-8
 
 model_path = '/home/khadas/catkin/src/EngineeringAndCreationProject2025/scripts/new_eac.nb'
-so_path = '/home/khadas/catkin/src/EngineeringAndCreationProject2025/scripts/libnn_new_eac.nb'
+so_path = '/home/khadas/catkin/src/EngineeringAndCreationProject2025/scripts/libnn_new_eac.so'
 
 import time
 from typing import cast
