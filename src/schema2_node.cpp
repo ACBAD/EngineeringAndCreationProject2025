@@ -264,6 +264,7 @@ int main(int argc, char* argv[]) {
       }
       ROS_INFO(title_msg, "reach zone");
       sendStraightTwist(0);
+      sys_state ++;
       break;
     }
     case 8: {
