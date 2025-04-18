@@ -221,7 +221,6 @@ def inference(input_image, do_filter=False):
         if ifPointInZone(input_image, ((right + left) / 2.0, (bottom + top) / 2.0)):
             print(f"Detect dang zone at {box}")
             continue
-
         if class_id not in (0, 2):
             if class_id == 1:
                 if score < 0.8:
