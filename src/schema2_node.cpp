@@ -141,7 +141,6 @@ int main(int argc, char* argv[]) {
       // ReSharper disable once CppExpressionWithoutSideEffects
       ros::Duration(0.5).sleep();
       break;
-
     }
     case 2: {
       ROS_INFO(title_msg, "object detected, aligning nearest...");
