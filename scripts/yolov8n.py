@@ -216,22 +216,19 @@ def inference(input_image, do_filter=False):
     filtered_scores = []
     filtered_classes = []
     for box, score, class_id in zip(boxes, scores, classes):
+        IMAGE_HEIGHT, IMAGE_WIDTH = input_image.shape[:2]
+        left, top, right, bottom = rect_normalize((IMAGE_HEIGHT, IMAGE_WIDTH), box)
+        if ifPointInZone(input_image, ((right + left) / 2.0, (bottom + top) / 2.0)):
+            print(f"Detect dang zone at {box}")
+            continue
+
         if class_id not in (0, 2):
             if class_id == 1:
                 if score < 0.8:
                     continue
-            filtered_boxes.append(box[None])
-            filtered_scores.append(score[None])
-            filtered_classes.append(class_id[None])
-            continue
-        IMAGE_HEIGHT, IMAGE_WIDTH = input_image.shape[:2]
-        left, top, right, bottom = rect_normalize((IMAGE_HEIGHT, IMAGE_WIDTH), box)
-        if not ifPointInZone(input_image, ((right - left) // 2, (bottom - top) // 2)):
-            filtered_boxes.append(box[None])
-            filtered_scores.append(score[None])
-            filtered_classes.append(class_id[None])
-        else:
-            print(f"Detect dang zone at {box}")
+        filtered_boxes.append(box[None])
+        filtered_scores.append(score[None])
+        filtered_classes.append(class_id[None])
     if not filtered_boxes:
         return None, None, None
     # print(f"Origin data: {(boxes, scores, classes)}")
