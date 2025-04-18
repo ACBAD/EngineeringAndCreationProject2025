@@ -59,12 +59,8 @@ if __name__ == "__main__":
         objs_msg = ObjectInfoArray()
         objs_msg.data = cast(list, objs_msg.data)
         objs_msg.stamp = rospy.Time.now()
-        try:
-            # Inference
-            boxes, scores, classes = inference(cap_img, do_filter=True)
-        except cv2.error as cv_err:
-            print(f"{cv_err}")
-            continue
+        # Inference
+        boxes, scores, classes = inference(cap_img, do_filter=True)
         cast(np.ndarray, boxes)
         if boxes is None:
             boxes = np.zeros(shape=(0, 4))
