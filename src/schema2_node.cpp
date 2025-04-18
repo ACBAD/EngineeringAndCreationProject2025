@@ -16,6 +16,7 @@ bool clog_state = false;
 eac_pkg::ObjectInfoArray object_infos;
 eac_pkg::ZoneInfo zone_info;
 int side_color;
+bool lift_state = false;
 SideColor agninst_color;
 ros::Publisher twist_pub;
 
@@ -85,7 +86,12 @@ void nodeCallback(const std_msgs::UInt8& msg) {
   trigger = msg.data;
 }
 
-void coverStateCallback(const std_msgs::UInt8 msg) {cover_state = msg.data;}
+void coverStateCallback(const std_msgs::UInt8& msg) {cover_state = msg.data;}
+
+void liftStateCallback(const std_msgs::UInt8& msg) {
+  if(msg.data)lift_state = true;
+  else lift_state = false;
+}
 
 /**
  * 寻找物体列表内的最近物体，基于distance属性
@@ -108,6 +114,7 @@ int main(int argc, char* argv[]) {
   ros::ServiceClient navi_client = node_handle.serviceClient<eac_pkg::EacGoal>("navigation");
   const ros::Publisher cover_pub = node_handle.advertise<std_msgs::UInt8>("/cover_cmd", 2);
   ros::Subscriber cover_sub = node_handle.subscribe("/cover_state", 2, coverStateCallback);
+  ros::Subscriber lift_sub = node_handle.subscribe("/lift_state", 1, liftStateCallback);
   twist_pub = node_handle.advertise<geometry_msgs::Twist>("/cmd_vel", 2);
   ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Debug);
   if (!ros::param::get("side_color", side_color)) {
@@ -203,9 +210,25 @@ int main(int argc, char* argv[]) {
       // ReSharper disable once CppDFALoopConditionNotUpdated
       ROS_SPINIF(!cover_state);
       ROS_INFO(title_msg, "object coverd! check cover state");
+      sys_state ++;
+      break;
+    }
+    case 5: {
       ROS_SPINIF(!checkInfoAviliable(object_infos.stamp));
+      std_msgs::UInt8 cover_angle;
+      cover_angle.data = 195;
       if(object_infos.data.size() == 0) {
         ROS_WARN(title_msg, "cover nothing !");
+        cover_pub.publish(cover_angle);
+        sys_state = 1;
+        break;
+      }
+      if(lift_state) {
+        ROS_WARN(title_msg, "LIFTTED!!!");
+        cover_pub.publish(cover_angle);
+        sendStraightTwist(-1, -0.2);
+        sendRotateTwist(180);
+        ROS_WARN(title_msg, "ROVERY OK!!!");
         sys_state = 1;
         break;
       }
@@ -213,7 +236,7 @@ int main(int argc, char* argv[]) {
       sys_state++;
       break;
     }
-    case 5: {
+    case 6: {
       ROS_SPINIF(!checkInfoAviliable(zone_info.stamp));
       if(zone_info.distance == 0 && zone_info.angle == 0) {
         ROS_INFO(title_msg, "can not detect zone, rotating...");
@@ -225,7 +248,7 @@ int main(int argc, char* argv[]) {
       sys_state++;
       break;
     }
-    case 6: {
+    case 7: {
       while (abs(zone_info.angle) > ZONE_ANGLE_LIMIT) {
         auto last_stamp = zone_info.stamp;
         ROS_SPINIF(!checkInfoAviliable(zone_info.stamp));
@@ -242,12 +265,12 @@ int main(int argc, char* argv[]) {
         ros::Duration(1.0).sleep();
         ROS_DEBUG("rotating ...");
       }
-      if(sys_state == 5)break;
+      if(sys_state == 6)break;
       ROS_INFO(title_msg, "aligning ok");
       sys_state++;
       break;
     }
-    case 7: {
+    case 8: {
       ROS_INFO(title_msg, "reaching to zone");
       sendStraightTwist(0.2);
       ROS_INFO(title_msg, "going for zone");
@@ -263,7 +286,7 @@ int main(int argc, char* argv[]) {
       }
       if(zone_info.angle == 0 && zone_info.distance == 0) {
         ROS_WARN("reach failed!");
-        sys_state = 5;
+        sys_state = 6;
         break;
       }
       ROS_INFO(title_msg, "reach zone");
@@ -271,7 +294,7 @@ int main(int argc, char* argv[]) {
       sys_state ++;
       break;
     }
-    case 8: {
+    case 9: {
       ROS_INFO(title_msg, "releasing objects...");
       std_msgs::UInt8 cover_angle;
       cover_angle.data = 195;
