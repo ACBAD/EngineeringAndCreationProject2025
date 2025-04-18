@@ -74,9 +74,8 @@ enum ObjectColor {
   OBJ_BLACK
 };
 
-inline bool checkInfoAviliable(const ros::Time infoTime, const ros::Duration delta = ros::Duration(0.05)) {
-  if(ros::Time::now() - infoTime > delta)return false;
-  return true;
+inline bool checkInfoAvailable(const ros::Time& infoTime, const ros::Duration& delta = ros::Duration(0.1)) {
+  return (ros::Time::now() - infoTime) <= delta;
 }
 
 #endif //DEFINES_H

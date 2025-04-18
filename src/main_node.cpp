@@ -174,7 +174,7 @@ int main(int argc, char* argv[]) {
   while (true) {
     switch (sys_state) {
     case 5: {
-      ROS_SPINIF(!checkInfoAviliable(zone_info.stamp));
+      ROS_SPINIF(!checkInfoAvailable(zone_info.stamp));
       if(zone_info.distance == 0 && zone_info.angle == 0) {
         ROS_INFO(title_msg, "can not detect zone, rotating...");
         sendRotateTwist();
@@ -188,7 +188,7 @@ int main(int argc, char* argv[]) {
     case 6: {
       while (abs(zone_info.angle) > ZONE_ANGLE_LIMIT) {
         auto last_stamp = zone_info.stamp;
-        ROS_SPINIF(!checkInfoAviliable(zone_info.stamp));
+        ROS_SPINIF(!checkInfoAvailable(zone_info.stamp));
         ROS_DEBUG("Now stamp is %f, last stamp is %f", zone_info.stamp.toSec(), last_stamp.toSec());
         if(zone_info.angle == 0 && zone_info.distance == 0) {
           ROS_WARN(title_msg, "zone lost! back to last case");
@@ -218,7 +218,7 @@ int main(int argc, char* argv[]) {
       // }
       // 新逻辑，通过堵转判断是否到达安全区
       while (!clog_state) {
-        ROS_SPINIF(!checkInfoAviliable(zone_info.stamp));
+        ROS_SPINIF(!checkInfoAvailable(zone_info.stamp));
         if (zone_info.distance == 0)break;
       }
       if(zone_info.angle == 0 && zone_info.distance == 0) {

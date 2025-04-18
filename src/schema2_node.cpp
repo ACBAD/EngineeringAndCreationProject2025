@@ -131,7 +131,7 @@ int main(int argc, char* argv[]) {
   while (sys_state != 0 && ros::ok()) {
     switch (sys_state) {
     case 1: {
-      ROS_SPINIF(!checkInfoAviliable(object_infos.stamp));
+      ROS_SPINIF(!checkInfoAvailable(object_infos.stamp));
       if (object_infos.data.size() > 0) {
         sys_state++;
         break;
@@ -152,7 +152,7 @@ int main(int argc, char* argv[]) {
         // ReSharper disable once CppExpressionWithoutSideEffects
         ros::Duration(1.0).sleep();
         auto last_stamp = object_infos.stamp;
-        ROS_SPINIF(!checkInfoAviliable(object_infos.stamp));
+        ROS_SPINIF(!checkInfoAvailable(object_infos.stamp));
         ROS_DEBUG("Now stamp is %f, last stamp is %f", object_infos.stamp.toSec(), last_stamp.toSec());
         try {nearest_object = findNearestObject();}
         catch (const std::out_of_range &e) {
@@ -180,7 +180,7 @@ int main(int argc, char* argv[]) {
       ROS_WARN(title_msg, "go straight for object");
       // 定义检查物体是否到达的函数
       auto checkReachObjectState = []() {
-        if (checkInfoAviliable(object_infos.stamp)) {
+        if (checkInfoAvailable(object_infos.stamp)) {
           return std::any_of(object_infos.data.begin(), object_infos.data.end(),
             [](const eac_pkg::ObjectInfo& n) {
               return n.distance < COVERABLE_DISTANCE;
@@ -191,7 +191,7 @@ int main(int argc, char* argv[]) {
       ROS_SPINIF(!checkReachObjectState());
       ROS_WARN(title_msg, "object coverable, stop");
       sendStraightTwist(0);
-      ROS_SPINIF(!checkInfoAviliable(object_infos.stamp));
+      ROS_SPINIF(!checkInfoAvailable(object_infos.stamp));
       if (checkReachObjectState()) {
         sys_state++;
         break;
@@ -213,7 +213,7 @@ int main(int argc, char* argv[]) {
       break;
     }
     case 5: {
-      ROS_SPINIF(!checkInfoAviliable(object_infos.stamp));
+      ROS_SPINIF(!checkInfoAvailable(object_infos.stamp));
       std_msgs::UInt8 cover_angle;
       cover_angle.data = 195;
       if(object_infos.data.size() == 0) {
@@ -236,7 +236,7 @@ int main(int argc, char* argv[]) {
       break;
     }
     case 6: {
-      ROS_SPINIF(!checkInfoAviliable(zone_info.stamp));
+      ROS_SPINIF(!checkInfoAvailable(zone_info.stamp));
       if(zone_info.distance == 0 && zone_info.angle == 0) {
         ROS_INFO(title_msg, "can not detect zone, rotating...");
         sendRotateTwist();
@@ -250,7 +250,7 @@ int main(int argc, char* argv[]) {
     case 7: {
       while (abs(zone_info.angle) > ZONE_ANGLE_LIMIT) {
         auto last_stamp = zone_info.stamp;
-        ROS_SPINIF(!checkInfoAviliable(zone_info.stamp));
+        ROS_SPINIF(!checkInfoAvailable(zone_info.stamp));
         ROS_DEBUG("Now stamp is %f, last stamp is %f", zone_info.stamp.toSec(), last_stamp.toSec());
         if(zone_info.angle == 0 && zone_info.distance == 0) {
           ROS_WARN(title_msg, "zone lost! back to last case");
@@ -280,7 +280,7 @@ int main(int argc, char* argv[]) {
       // }
       // 新逻辑，通过堵转判断是否到达安全区
       while (!clog_state) {
-        ROS_SPINIF(!checkInfoAviliable(zone_info.stamp));
+        ROS_SPINIF(!checkInfoAvailable(zone_info.stamp));
         if (zone_info.distance == 0)break;
       }
       if(zone_info.angle == 0 && zone_info.distance == 0) {
