@@ -111,6 +111,8 @@ def ifPointInZone(img, point):
     hsv_img = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     purple_mask = morphologyProcess(createColorMask(hsv_img, Color.PURPLE, is_hsv=True), kernel_shape=10)
     convex_hull_contour = createConvexHullContour(purple_mask, connect_radius=150)
+    if convex_hull_contour is None:
+        return False
     if cv2.pointPolygonTest(convex_hull_contour, point, True) >= 0:
         return True
     return False
