@@ -104,7 +104,7 @@ int main(int argc, char* argv[]) {
   }
 
   const ros::Publisher cover_pub = node_handle.advertise<std_msgs::UInt8>("/cover_cmd", 2);
-  const ros::Publisher schema2_pub = node_handle.advertise<std_msgs::UInt8>("/schema2_node", 2);
+  const ros::Publisher schema2_pub = node_handle.advertise<std_msgs::UInt8>("/schema2_cmd", 2);
   ros::ServiceClient navi_client = node_handle.serviceClient<eac_pkg::EacGoal>("navigation");
   twist_pub = node_handle.advertise<geometry_msgs::Twist>("/cmd_vel", 2);
   ros::Subscriber clog_sub = node_handle.subscribe("/clogging_state", 1, clogCallback);
