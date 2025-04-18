@@ -128,7 +128,7 @@ int main(int argc, char* argv[]) {
   agninst_color = side_color == SIDE_RED ? SIDE_BLUE : SIDE_RED;
   uint8_t sys_state = 1;
   constexpr char title_msg[] = "schema2 acting: %s";
-  while (sys_state != 0 && ros::ok()) {
+  while (ros::ok()) {
     switch (sys_state) {
     case 1: {
       ROS_SPINIF(!checkInfoAvailable(object_infos.stamp));
