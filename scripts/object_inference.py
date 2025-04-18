@@ -58,7 +58,7 @@ if __name__ == "__main__":
             continue
         
         # Inference
-        boxes, scores, classes = inference(cap_img)
+        boxes, scores, classes = inference(cap_img, do_filter=True)
 
         objs_msg = ObjectInfoArray()
         objs_msg.data = cast(list, objs_msg.data)
