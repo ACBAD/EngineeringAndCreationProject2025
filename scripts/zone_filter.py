@@ -5,7 +5,7 @@ import enum
 import os
 import cv2
 import numpy as np
-from yolov8n import class_name
+
 
 # 定义紫色的HSV范围（H值需要根据实际情况调整）
 lower_purple = np.array([125, 50, 35])  # H最小值，S最小值，V最小值

@@ -10,7 +10,7 @@ import cv2
 import rospy
 from eac_pkg.msg import ObjectInfo, ObjectInfoArray, std_msgs
 from std_msgs.msg import UInt8
-from yolov8n import inference, init_nn, class_name
+from yolov8n import inference, init_nn
 init_nn(nn_nb=model_path, nn_lib=so_path, cls_num=4)
 import numpy as np
 
