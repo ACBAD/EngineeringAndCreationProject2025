@@ -83,7 +83,12 @@ if __name__ == "__main__":
             distance = center_y * DISTANCE_SCALE
             this_obj.angle = angle
             this_obj.distance = IMAGE_HEIGHT - distance
-            this_obj.color = color_num
+            if color_num == 0:
+                this_obj.color = 1
+            elif color_num == 1:
+                this_obj.color = 0
+            else:
+                this_obj.color = color_num
             this_obj.shape = 0
             objs_msg.data.append(this_obj)
         pub.publish(objs_msg)
