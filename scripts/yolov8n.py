@@ -33,6 +33,12 @@ constant_martix = np.array([[0, 1, 2, 3,
 
 CLASSES = ('red', 'yellow', 'blue', 'black')
 
+class_name = {
+    'red': 0,
+    'blue': 1,
+    'black': 2,
+    'green': 3
+}
 
 def sigmoid(x):
     return 1 / (1 + np.exp(-x))
@@ -221,10 +227,6 @@ def inference(input_image, do_filter=False):
         if ifPointInZone(input_image, ((right + left) / 2.0, (bottom + top) / 2.0)):
             print(f"Detect dang zone at {box}")
             continue
-        if class_id not in (0, 2):
-            if class_id == 1:
-                if score < 0.8:
-                    continue
         filtered_boxes.append(box[None])
         filtered_scores.append(score[None])
         filtered_classes.append(class_id[None])

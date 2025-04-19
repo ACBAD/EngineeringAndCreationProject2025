@@ -5,10 +5,10 @@ import enum
 import os
 import cv2
 import numpy as np
-
+from yolov8n import class_name
 
 # 定义紫色的HSV范围（H值需要根据实际情况调整）
-lower_purple = np.array([115, 50, 35])  # H最小值，S最小值，V最小值
+lower_purple = np.array([125, 50, 35])  # H最小值，S最小值，V最小值
 upper_purple = np.array([150, 230, 230])  # H最大值，S最大值，V最大值
 
 lower_red1 = np.array([0, 80, 70])
@@ -22,8 +22,8 @@ upper_blue = np.array([120, 255, 230])
 
 class Color(enum.Enum):
     PURPLE = 2
-    RED = 0
-    BLUE = 1
+    RED = class_name['red']
+    BLUE = class_name['blue']
 
 
 def createColorMask(img, color: Color, is_hsv=False):
@@ -180,7 +180,7 @@ def rosRun():
         if not read_state:
             rospy.logwarn("Cam read failed")
             continue
-        crop_height = 270
+        crop_height = 400
         IMAGE_HEIGHT, IMAGE_WIDTH = cap_img.shape[:2]
         if IMAGE_HEIGHT < crop_height:
             raise ValueError(f'Image height is {IMAGE_HEIGHT}, can not crop')

@@ -116,7 +116,7 @@ int main(int argc, char* argv[]) {
   cover_angle.data = 195;
   cover_pub.publish(cover_angle);
   // ReSharper disable once CppExpressionWithoutSideEffects
-  ros::Duration(3).sleep();
+  ros::Duration(1).sleep();
   ROS_INFO("init ok");
   // 等待发出开始指令
   std::cout<<"waiting for start signal";
@@ -125,7 +125,6 @@ int main(int argc, char* argv[]) {
     return 1;
   }
   // ReSharper disable once CppExpressionWithoutSideEffects
-  ros::Duration(3.0).sleep();
   ROS_INFO("ATTACK!");
 
   cover_angle.data = 50;
@@ -177,7 +176,7 @@ int main(int argc, char* argv[]) {
       ROS_SPINIF(!checkInfoAvailable(zone_info.stamp));
       if(zone_info.distance == 0 && zone_info.angle == 0) {
         ROS_INFO(title_msg, "can not detect zone, rotating...");
-        sendRotateTwist();
+        sendRotateTwist(-30);
         break;
       }
       ROS_DEBUG("Now zone, distance is %f, angle is %f", zone_info.distance, zone_info.angle);
@@ -221,11 +220,11 @@ int main(int argc, char* argv[]) {
         ROS_SPINIF(!checkInfoAvailable(zone_info.stamp));
         if (zone_info.distance == 0)break;
       }
-      if(zone_info.angle == 0 && zone_info.distance == 0) {
-        ROS_WARN("reach failed!");
-        sys_state = 5;
-        break;
-      }
+      // if(zone_info.angle == 0 && zone_info.distance == 0) {
+      //   ROS_WARN("reach failed!");
+      //   sys_state = 5;
+      //   break;
+      // }
       ROS_INFO(title_msg, "reach zone");
       sendStraightTwist(0);
       sys_state ++;
