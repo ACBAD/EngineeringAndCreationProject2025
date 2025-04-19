@@ -22,8 +22,8 @@ upper_blue = np.array([120, 255, 230])
 
 class Color(enum.Enum):
     PURPLE = 2
-    RED = class_name['red']
-    BLUE = class_name['blue']
+    RED = 0
+    BLUE = 1
 
 
 def createColorMask(img, color: Color, is_hsv=False):
