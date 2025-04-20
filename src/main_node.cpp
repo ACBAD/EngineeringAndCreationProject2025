@@ -142,7 +142,7 @@ int main(int argc, char* argv[]) {
   go_msg.linear.x = 0.7;
   twist_pub.publish(go_msg);
   // ReSharper disable once CppExpressionWithoutSideEffects
-  ros::Duration(0.8).sleep();
+  ros::Duration(0.6).sleep();
   go_msg.linear.x = 0;
   twist_pub.publish(go_msg);
 
@@ -208,7 +208,7 @@ int main(int argc, char* argv[]) {
     }
     case 7: {
       ROS_INFO(title_msg, "reaching to zone");
-      sendStraightTwist(0.2);
+      sendStraightTwist(0.4);
       ROS_INFO(title_msg, "going for zone");
       // 旧逻辑，通过视觉判断是否到达安全区
       // while (zone_info.distance > REACH_ZONE_DISTANCE) {

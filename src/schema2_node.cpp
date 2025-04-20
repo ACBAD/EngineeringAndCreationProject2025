@@ -271,7 +271,7 @@ int main(int argc, char* argv[]) {
     }
     case 8: {
       ROS_INFO(title_msg, "reaching to zone");
-      sendStraightTwist(0.2);
+      sendStraightTwist(0.4);
       ROS_INFO(title_msg, "going for zone");
       // 旧逻辑，通过视觉判断是否到达安全区
       // while (zone_info.distance > REACH_ZONE_DISTANCE) {
